@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RYZE Field Force Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --cream:#F7F0DE; --cream-2:#EFE6CF; --paper:#FFFBF1; --ink:#14110C; --lilac:#CDBBF5; --lilac-hover:#BCA6F0; --lilac-deep:#9A82E3; --lilac-ink:#24153F; --muted:#6D6451;
+  --line:#D9CDAE; --coral:#F28080; --magenta:#D966A5; --mint:#12E3AB; --mint-dark:#0A8F6C; --err:#C0392B;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Hind Siliguri","Noto Sans Bengali","Segoe UI",Roboto,Arial,sans-serif;background:var(--cream);color:var(--ink);line-height:1.55;font-size:16px;min-height:100vh}
+img.logo{mix-blend-mode:multiply;display:block}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--magenta);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* ---------- Login ---------- */
+.login{min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr}
+.login-art{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;background:var(--cream)}
+.login-art svg{width:min(440px,84%);height:auto;display:block;overflow:visible}
+.anim-logo{width:100%;display:flex;justify-content:center}
+.d,.rib,#parts circle{transform-box:fill-box;transform-origin:50% 50%}
+.d{animation:swirl 10s cubic-bezier(.45,0,.3,1) infinite;animation-delay:var(--dl)}
+@keyframes swirl{
+  0%,10%{transform:translate(0,0) rotate(0) scale(1,1)}
+  24%{transform:translate(calc(var(--tx)*.6),calc(var(--ty)*.8)) rotate(calc(var(--rot)*.4)) scale(calc(var(--sx)*.98),.62)}
+  42%{transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(var(--sx),.1)}
+  58%{transform:translate(calc(var(--tx)*-.7),var(--ty)) rotate(calc(var(--rot)*-1.2)) scale(var(--sx),.08)}
+  72%{transform:translate(0,0) rotate(0) scale(1.03,1.04)}
+  80%,100%{transform:translate(0,0) rotate(0) scale(1,1)}
+}
+.rib{opacity:0;stroke-dasharray:28 72;animation:ribbon 10s linear infinite}
+.r2{animation-name:ribbon2;animation-delay:.3s}
+.r3{stroke-dasharray:none;animation-name:ring}
+@keyframes ribbon{
+  0%{opacity:.9;stroke-dashoffset:0}
+  40%{opacity:.9}
+  52%,100%{opacity:0;stroke-dashoffset:-170}
+}
+@keyframes ribbon2{
+  0%,16%{opacity:0;stroke-dashoffset:0}
+  26%{opacity:.95}
+  46%{opacity:.8}
+  58%,100%{opacity:0;stroke-dashoffset:100}
+}
+@keyframes ring{0%,6%{opacity:.5}30%{opacity:.7}44%,100%{opacity:0}}
+#parts circle{opacity:0;animation:burst 10s ease-out infinite}
+@keyframes burst{
+  0%,34%{opacity:0;transform:translate(0,0) scale(.3)}
+  42%{opacity:1}
+  64%{opacity:.85;transform:translate(var(--dx),var(--dy)) scale(1)}
+  76%,100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.4)}
+}
+.shine{opacity:0;animation:shine 10s linear infinite}
+@keyframes shine{
+  0%,84%{opacity:0;transform:translateX(-200px)}
+  86%{opacity:1}
+  95%{opacity:1;transform:translateX(800px)}
+  96%,100%{opacity:0;transform:translateX(800px)}
+}
+.login-art p{margin:28px 0 0;color:var(--muted);max-width:30ch;text-align:center}
+.login-box{display:flex;flex-direction:column;justify-content:center;padding:48px clamp(24px,6vw,80px);max-width:560px;width:100%}
+.login-box h1{font-size:2rem;line-height:1.2;margin:0 0 6px;font-weight:700}
+.login-box .sub{margin:0 0 28px;color:var(--muted)}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--cream-2);border-radius:12px;padding:4px;margin-bottom:24px}
+.seg button{border:0;background:transparent;padding:10px 12px;border-radius:9px;cursor:pointer;font-weight:600;color:var(--muted)}
+.seg button[aria-selected="true"]{background:var(--lilac);color:var(--lilac-ink)}
+
+/* ---------- Fields ---------- */
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-weight:600;font-size:.92rem}
+.field .hint{font-weight:400;color:var(--muted);font-size:.82rem}
+.field input,.field select,.field textarea{width:100%;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;min-height:46px}
+.field input:hover,.field select:hover,.field textarea:hover{border-color:#bfae82}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--lilac-deep);outline:none;box-shadow:0 0 0 3px rgba(217,102,165,.35)}
+.field.invalid input,.field.invalid select,.field.invalid textarea{border-color:var(--err)}
+.field textarea{min-height:84px;resize:vertical}
+.field.full{grid-column:1/-1}
+.opt{font-weight:400;color:var(--muted);font-size:.82rem}
+.chk{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);font-weight:400;cursor:pointer}
+.chk input{width:auto;min-height:0}
+.editbar{background:var(--cream-2);border:1.5px solid var(--lilac-deep);border-radius:12px;padding:10px 14px;margin:0 0 20px;font-weight:600}
+.linkbtn.ed{color:var(--lilac-ink)}
+.field .err{color:var(--err);font-size:.82rem;min-height:0}
+.btn{border:0;border-radius:12px;padding:13px 22px;font-weight:700;cursor:pointer;min-height:48px}
+.btn-primary{background:var(--lilac);color:var(--lilac-ink)}
+.btn-primary:hover{background:var(--lilac-hover)}
+.btn-ghost{background:transparent;border:1.5px solid var(--lilac-deep);color:var(--lilac-ink)}
+.btn-ghost:hover{background:var(--cream-2)}
+.btn-primary[disabled]{opacity:.6;cursor:wait}
+.stack{display:grid;gap:16px}
+
+/* ---------- App shell ---------- */
+header.top{display:flex;align-items:center;gap:16px;padding:14px clamp(16px,4vw,40px);border-bottom:1px solid var(--line);background:var(--cream);position:sticky;top:0;z-index:5}
+header.top img{height:34px;width:auto}
+header.top .name{font-weight:700;font-size:1.05rem;white-space:nowrap}
+header.top .spacer{flex:1}
+.today{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;margin-right:12px;font-size:.85rem;color:var(--muted);white-space:nowrap}
+.today b{color:var(--ink,#1c1a16);font-size:.95rem;font-weight:700}
+.who{display:flex;align-items:center;gap:10px;font-size:.9rem}
+.who .badge{background:var(--mint);color:#05382B;font-weight:700;padding:3px 10px;border-radius:99px;font-size:.8rem}
+.who .id{color:var(--muted)}
+main{max-width:1100px;margin:0 auto;padding:28px clamp(16px,4vw,40px) 80px}
+.tabs{display:flex;gap:6px;border-bottom:1.5px solid var(--line);margin-bottom:28px}
+.tabs button{background:none;border:0;padding:12px 18px;font-weight:600;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--lilac-deep)}
+
+/* ---------- Form ---------- */
+.card{background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r);padding:clamp(18px,3vw,32px)}
+.card h2{margin:0 0 4px;font-size:1.3rem}
+.card .lead{margin:0 0 24px;color:var(--muted)}
+fieldset{border:0;padding:0;margin:0 0 28px}
+legend{font-weight:700;font-size:1rem;padding:0 0 12px;width:100%;border-bottom:1px solid var(--line);margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 20px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.note{font-size:.85rem;color:var(--muted)}
+
+/* ---------- Records ---------- */
+.bar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:16px}
+.bar .field{flex:1;min-width:200px}
+.tablewrap{overflow-x:auto;border:1.5px solid var(--line);border-radius:var(--r);background:var(--paper)}
+table{border-collapse:collapse;width:100%;min-width:2400px;font-size:.9rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--cream-2);font-weight:700;position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.78rem;font-weight:700}
+.tag.New{background:#CFF8EA;color:#05604A}
+.tag.Existing{background:#F1E5C4;color:#5A4A1C}
+.tag.Resigned{background:#F9D2D2;color:#8A2222}
+.empty{padding:48px 20px;text-align:center;color:var(--muted)}
+.linkbtn{background:none;border:0;color:var(--err);cursor:pointer;font-weight:600;padding:4px 6px}
+.count{font-weight:600;color:var(--muted);margin:0 0 10px}
+
+/* ---------- Approval requests ---------- */
+.req{display:grid;gap:12px}
+.req-card{background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;grid-template-columns:1fr auto;gap:12px 20px;align-items:center}
+.req-card h3{margin:6px 0 0;font-size:1.05rem}
+.req-card .meta{color:var(--muted);font-size:.88rem;margin-top:2px}
+.req-card .reason{margin-top:6px;font-size:.9rem}
+.req-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn.sm{min-height:42px;padding:8px 16px}
+.tag.add{background:#CFF8EA;color:#05604A}
+.tag.del{background:#F9D2D2;color:#8A2222}
+.tag.edit{background:#DCE8FB;color:#1F3F7A}
+.diff{margin-top:8px;font-size:.88rem;line-height:1.5}
+.diff b{font-weight:700}
+.diff s{color:#8A2222}
+.diff i{font-style:normal;color:#05604A;font-weight:600}
+.tag.wait{background:#F1E5C4;color:#5A4A1C}
+.tag.rej{background:#E4DCC8;color:#4A4333}
+.dot{display:inline-block;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--coral);color:#fff;font-size:.75rem;font-weight:700;line-height:20px;text-align:center;margin-left:6px}
+@media (max-width:820px){.req-card{grid-template-columns:1fr}}
+
+/* ---------- Detail popup ---------- */
+.namebtn{background:none;border:0;padding:0;font:inherit;font-weight:700;color:var(--lilac-ink);text-decoration:underline;text-decoration-color:var(--lilac-deep);text-underline-offset:3px;cursor:pointer;text-align:left}
+.namebtn:hover{color:var(--magenta)}
+tbody tr[data-row]{cursor:pointer}
+tbody tr[data-row]:hover td{background:var(--cream)}
+.modal{position:fixed;inset:0;background:rgba(20,17,12,.55);z-index:30;display:flex;align-items:flex-start;justify-content:center;padding:clamp(10px,3vh,32px) 12px;overflow-y:auto}
+.modal.fit{overflow:hidden;padding:8px 12px}
+.modal-box{position:relative;background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r);width:min(980px,100%);box-shadow:0 20px 60px rgba(0,0,0,.3);transform-origin:top center}
+.modal-x{position:absolute;top:10px;right:10px;border:0;background:var(--cream-2);border-radius:9px;width:34px;height:34px;font-size:1rem;cursor:pointer;z-index:2}
+.modal-x:hover{background:var(--lilac)}
+#detailShot{background:var(--paper);border-radius:var(--r) var(--r) 0 0}
+.modal-head{padding:12px 56px 8px 18px;border-bottom:1px solid var(--line)}
+.modal-head h2{margin:0;font-size:1.15rem;line-height:1.25}
+.modal-sub{color:var(--muted);font-size:.82rem}
+.modal-body{padding:4px 18px 12px}
+.dcols{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}
+h3.dgroup{font-size:.8rem;margin:10px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--line);color:var(--lilac-ink)}
+.dl{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:0}
+.dl>div{min-width:0}
+.dl dt{font-size:.7rem;color:var(--muted);font-weight:600;line-height:1.2}
+.dl dd{margin:1px 0 0;font-size:.86rem;font-weight:500;line-height:1.3;word-break:break-word;white-space:pre-wrap}
+.dl .full{grid-column:1/-1}
+.modal-foot{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;padding:8px 18px 12px;border-top:1px solid var(--line)}
+.modal-foot .btn{min-height:38px;padding:6px 14px}
+@media (max-width:820px){.dcols{grid-template-columns:1fr}}
+@media (max-width:480px){.dl{grid-template-columns:1fr}}
+
+/* ---------- Toast ---------- */
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:var(--cream);padding:14px 22px;border-radius:12px;font-weight:600;z-index:20;box-shadow:0 8px 30px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center;max-width:92vw}
+.toast::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--mint);flex:none}
+.toast.bad::before{background:var(--coral)}
+
+@media (max-width:820px){
+  .login{grid-template-columns:1fr}
+  .login-art{padding:28px 24px;border-right:0}
+  .login-art svg{width:220px}
+  .login-art p{display:none}
+  .login-box{margin:0 auto;padding:28px 20px 48px}
+  .grid{grid-template-columns:1fr}
+  header.top .name{display:none}
+  .who .id{display:none}
+  .today{margin-right:6px;font-size:.75rem}
+  .today b{font-size:.82rem}
+  .today .wd{display:none}
+}
+@media (prefers-reduced-motion:no-preference){
+  .toast{animation:pop .25s ease-out}
+  @keyframes pop{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+}
+
+/* ---------- Footer ---------- */
+.site-footer{
+  text-align:center;
+  padding:28px 16px 40px;
+  color:var(--muted);
+  font-size:.85rem;
+  border-top:1px solid var(--line);
+  margin-top:40px;
+  line-height:1.7;
+}
+.site-footer strong{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<section class="login" id="loginView">
+  <div class="login-art">
+    <div class="anim-logo" role="img" aria-label="RYZE">
+      <svg viewBox="0 0 860 750" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#F58080"/><stop offset=".55" stop-color="#E49AC6" stop-opacity=".92"/><stop offset="1" stop-color="#EFDCFB" stop-opacity=".35"/></linearGradient>
+          <linearGradient id="g2" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#E8D6FA" stop-opacity=".15"/><stop offset=".5" stop-color="#E49AC6" stop-opacity=".75"/><stop offset="1" stop-color="#F27A78"/></linearGradient>
+          <linearGradient id="g3" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#14F0B4"/><stop offset=".55" stop-color="#7FB4D8" stop-opacity=".8"/><stop offset="1" stop-color="#D3C4F4" stop-opacity=".45"/></linearGradient>
+          <linearGradient id="g4" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#E4DAF8" stop-opacity=".12"/><stop offset=".5" stop-color="#8CCFE0" stop-opacity=".8"/><stop offset="1" stop-color="#10F5B8"/></linearGradient>
+          <linearGradient id="gr1" x1="0" x2="1"><stop offset="0" stop-color="#14F0B4" stop-opacity="0"/><stop offset=".5" stop-color="#3DEFB0"/><stop offset="1" stop-color="#7BD0F0" stop-opacity=".2"/></linearGradient>
+          <linearGradient id="gr2" x1="0" x2="1"><stop offset="0" stop-color="#C084E0" stop-opacity="0"/><stop offset=".5" stop-color="#B26AD2"/><stop offset="1" stop-color="#F28080" stop-opacity=".3"/></linearGradient>
+        <linearGradient id="gs" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+          <mask id="wm" maskUnits="userSpaceOnUse" x="91" y="16" width="693" height="168"><image href="data:image/png;base64,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" x="91" y="16" width="693" height="168"/></mask>
+        </defs>
+        <image href="data:image/png;base64,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" x="91" y="16" width="693" height="168"/>
+        <g mask="url(#wm)"><rect class="shine" x="0" y="16" width="190" height="168" fill="url(#gs)"/></g>
+        <g class="discs">
+          <ellipse class="d" style="--ty:-70px;--tx:0px;--rot:-4deg;--sx:1.03;--dl:0s;mix-blend-mode:multiply" cx="430" cy="362" rx="413" ry="112" fill="url(#g1)"/>
+          <ellipse class="d" style="--ty:-26px;--tx:14px;--rot:5deg;--sx:1;--dl:.08s;mix-blend-mode:multiply" cx="430" cy="492" rx="380" ry="103" fill="url(#g2)"/>
+          <ellipse class="d" style="--ty:36px;--tx:-16px;--rot:-6deg;--sx:.98;--dl:.16s;mix-blend-mode:multiply" cx="510" cy="604" rx="290" ry="79" fill="url(#g3)"/>
+          <ellipse class="d" style="--ty:84px;--tx:12px;--rot:7deg;--sx:1;--dl:.24s;mix-blend-mode:multiply" cx="438" cy="668" rx="265" ry="65" fill="url(#g4)"/>
+        </g>
+        <ellipse class="rib r3" cx="430" cy="640" rx="360" ry="78" fill="none" stroke="#CFC8E4" stroke-width="2.5"/>
+        <ellipse class="rib r1" cx="430" cy="640" rx="335" ry="72" pathLength="100" fill="none" stroke="url(#gr1)" stroke-width="12" stroke-linecap="round"/>
+        <ellipse class="rib r2" cx="430" cy="410" rx="380" ry="46" pathLength="100" fill="none" stroke="url(#gr2)" stroke-width="10" stroke-linecap="round"/>
+        <g id="parts" fill="#17EDB2"></g>
+      </svg>
+    </div>
+    <p>মাঠপর্যায়ের কর্মীদের তথ্য এক জায়গায় জমা দিন ও দেখুন।</p>
+  </div>
+  <div class="login-box">
+    <h1>RYZE Field Force Data</h1>
+    <p class="sub">আপনার আইডি ও ফোন নাম্বার দিয়ে প্রবেশ করুন।</p>
+
+    <div class="seg" role="tablist" aria-label="লগইনের ধরন">
+      <button type="button" role="tab" id="tabDGO" aria-selected="true">DGO</button>
+      <button type="button" role="tab" id="tabSUP" aria-selected="false">Supervisor</button>
+    </div>
+
+    <form id="loginForm" class="stack" novalidate>
+      <div class="field" id="f_loginId">
+        <label for="loginId" id="loginIdLabel">DGO ID</label>
+        <input id="loginId" autocomplete="username" required>
+        <span class="err" aria-live="polite"></span>
+      </div>
+      <div class="field" id="f_loginPhone">
+        <label for="loginPhone">ফোন নাম্বার <span class="hint">(১১ ডিজিট)</span></label>
+        <input id="loginPhone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="01XXXXXXXXX" required>
+        <span class="err" aria-live="polite"></span>
+      </div>
+      <button class="btn btn-primary" type="submit">লগইন করুন</button>
+    </form>
+  </div>
+</section>
+
+<!-- ===================== APP ===================== -->
+<div id="appView" hidden>
+  <header class="top">
+    <img class="logo" src="data:image/png;base64,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" alt="RYZE">
+    <span class="name">Field Force Data</span>
+    <span class="spacer"></span>
+    <div class="today" aria-label="আজকের তারিখ"><b id="todayDate"></b><span class="wd" id="todayDay"></span></div>
+    <div class="who"><span class="badge" id="whoRole"></span><span class="id" id="whoId"></span></div>
+    <button class="btn btn-ghost" id="logoutBtn" type="button" style="min-height:40px;padding:8px 16px">লগআউট</button>
+  </header>
+
+  <main>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tabForm" aria-selected="true">তথ্য জমা দিন</button>
+      <button type="button" role="tab" id="tabList" aria-selected="false">জমাকৃত তথ্য <span id="countBadge"></span></button>
+      <button type="button" role="tab" id="tabReq" aria-selected="false"><span id="reqLabel">অনুমোদন</span><span class="dot" id="reqDot" hidden></span></button>
+      <button type="button" role="tab" id="tabDash" aria-selected="false">ড্যাশবোর্ড</button>
+      <button type="button" role="tab" id="tabSup" aria-selected="false" hidden>সুপারভাইজার</button>
+    </div>
+
+    <!-- Form -->
+    <section id="formPane">
+      <form class="card" id="dataForm" novalidate>
+        <h2 id="formTitle">নতুন তথ্য যোগ করুন</h2>
+        <div class="editbar" id="editBar" hidden></div>
+        <p class="lead" id="formLead">সব ঘর পূরণ করে “জমা দিন” চাপুন।</p>
+
+        <fieldset>
+          <legend>ডিস্ট্রিবিউটর</legend>
+          <div class="grid">
+            <div class="field"><label for="dd_code">DD Code</label><input id="dd_code" name="dd_code" required><span class="err"></span><small id="allocHint" style="color:var(--muted);font-weight:600"></small></div>
+            <div class="field"><label for="dd_name">DD Name</label><input id="dd_name" name="dd_name" required><span class="err"></span></div>
+            <div class="field"><label for="rso_code">RSO Code / SUP Code</label><input id="rso_code" name="rso_code" required><span class="err"></span></div>
+            <div class="field"><label for="pool_phone">Pool Phone</label><input id="pool_phone" name="pool_phone" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX" required><span class="err"></span></div>
+            <div class="field"><label for="own_retail_code">Own Retail Code</label><input id="own_retail_code" name="own_retail_code" required><span class="err"></span></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>কর্মীর তথ্য</legend>
+          <div class="grid">
+            <div class="field"><label for="nid">NID নাম্বার</label><input id="nid" name="nid" inputmode="numeric" placeholder="১০, ১৩ বা ১৭ ডিজিট" required><span class="err"></span></div>
+            <div class="field"><label for="rid">RID <span class="opt">(ঐচ্ছিক)</span></label><input id="rid" name="rid"><span class="err"></span></div>
+            <div class="field"><label for="name">Name</label><input id="name" name="name" required><span class="err"></span></div>
+            <div class="field"><label for="rg_name">RG Name</label><input id="rg_name" name="rg_name" required><span class="err"></span></div>
+            <div class="field"><label for="rg_code">RG Code</label><input id="rg_code" name="rg_code" required><span class="err"></span></div>
+            <div class="field" id="scannerField"><label for="scanner_sl">Scanner SL No.</label><input id="scanner_sl" name="scanner_sl" required><span class="err"></span></div>
+            <div class="field"><label for="bank_account">Bank Account</label><input id="bank_account" name="bank_account" inputmode="numeric" required><span class="err"></span></div>
+            <div class="field"><label for="designation">Designation</label><select id="designation" name="designation" required><option value="">নির্বাচন করুন</option><option>RYZE General</option><option>RYZE Rangers</option><option>Online RYZE General</option></select><span class="err"></span></div>
+            <div class="field"><label for="joining_date">Joining Date</label><input id="joining_date" name="joining_date" type="date" required><span class="err"></span></div>
+            <div class="field"><label for="date_of_birth">Date of Birth</label><input id="date_of_birth" name="date_of_birth" type="date" required><span class="err"></span></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>ব্যক্তিগত তথ্য</legend>
+          <div class="grid">
+            <div class="field"><label for="blood_group">Blood Group</label>
+              <select id="blood_group" name="blood_group" required><option value="">নির্বাচন করুন</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select><span class="err"></span></div>
+            <div class="field"><label for="education">Education (Max)</label>
+              <select id="education" name="education" required><option value="">নির্বাচন করুন</option><option>Below SSC</option><option>SSC</option><option>HSC</option><option>Diploma</option><option>Bachelor / Honours</option><option>Masters</option><option>Other</option></select><span class="err"></span></div>
+            <div class="field"><label for="father_name">Father's Name</label><input id="father_name" name="father_name" required><span class="err"></span></div>
+            <div class="field"><label for="mother_name">Mother's Name</label><input id="mother_name" name="mother_name" required><span class="err"></span></div>
+            <div class="field full"><label for="present_address">Present Address</label><textarea id="present_address" name="present_address" required></textarea><span class="err"></span></div>
+            <div class="field full"><label for="permanent_address">Permanent Address</label><textarea id="permanent_address" name="permanent_address" required></textarea>
+              <label class="chk"><input type="checkbox" id="sameAddr"> বর্তমান ঠিকানার মতোই</label><span class="err"></span></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>জরুরি যোগাযোগ</legend>
+          <div class="grid">
+            <div class="field"><label for="emergency_name">Emergency Contact Name</label><input id="emergency_name" name="emergency_name" required><span class="err"></span></div>
+            <div class="field"><label for="emergency_phone">Emergency Contact Number</label><input id="emergency_phone" name="emergency_phone" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX" required><span class="err"></span></div>
+            <div class="field"><label for="emergency_relation">Relation</label><input id="emergency_relation" name="emergency_relation" placeholder="যেমন: স্ত্রী, ভাই, বাবা" required><span class="err"></span></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>অবস্থা</legend>
+          <div class="grid">
+            <div class="field full"><label for="status">Status</label>
+              <select id="status" name="status" required><option value="">নির্বাচন করুন</option><option>New</option><option>Existing</option><option>Resigned</option></select><span class="err"></span></div>
+          </div>
+        </fieldset>
+
+        <div class="actions">
+          <button class="btn btn-primary" type="submit" id="submitBtn">জমা দিন</button>
+          <button class="btn btn-ghost" type="reset" id="resetBtn">ঘর খালি করুন</button>
+          <button class="btn btn-ghost" type="button" id="cancelEditBtn" hidden>এডিট বাতিল</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- List -->
+    <section id="listPane" hidden>
+      <div class="bar">
+        <div class="field"><label for="search">খুঁজুন</label><input id="search" type="search" placeholder="NID, RID, নাম, DD Code, ফোন…"></div>
+        <div class="field" style="min-width:160px">
+          <label for="ddFilter">House / DD Code ফিল্টার</label>
+          <select id="ddFilter"><option value="">সব House / DD Code</option></select>
+        </div>
+        <div class="field" style="min-width:150px">
+          <label for="catFilter">ক্যাটাগরি (RR / RG) ফিল্টার</label>
+          <select id="catFilter"><option value="">সব ক্যাটাগরি</option></select>
+        </div>
+        <div class="field" style="min-width:170px">
+          <label for="supFilter">সুপারভাইজার নেম ফিল্টার</label>
+          <select id="supFilter"><option value="">সব সুপারভাইজার</option></select>
+        </div>
+        <button class="btn btn-ghost" id="csvBtn" type="button">CSV ডাউনলোড</button>
+        <button class="btn btn-ghost" id="xlsxBtn" type="button">Excel ডাউনলোড</button>
+        <button class="btn btn-ghost" id="listShotBtn" type="button" title="স্ক্রিনশট" aria-label="স্ক্রিনশট" style="min-width:48px;padding:8px 12px;font-size:1.2rem">📷</button>
+        <button class="btn btn-ghost" id="refreshBtn" type="button">রিফ্রেশ</button>
+      </div>
+      <p class="count" id="countText"></p>
+      <div id="listShotArea">
+        <div class="tablewrap" id="tableWrap"></div>
+      </div>
+    </section>
+
+    <section id="reqPane" hidden>
+      <p class="count" id="reqText"></p>
+      <div class="req" id="reqList"></div>
+    </section>
+
+    <!-- Dashboard -->
+    <section id="dashPane" hidden>
+      <div class="bar">
+        <p class="count" id="dashText" style="margin:0;flex:1">House-wise Field Force Allocation</p>
+        <button class="btn btn-ghost" id="dashShotBtn" type="button" title="স্ক্রিনশট" aria-label="স্ক্রিনশট" style="min-width:48px;padding:8px 12px;font-size:1.2rem">📷</button>
+        <button class="btn btn-ghost" id="dashRefreshBtn" type="button">রিফ্রেশ</button>
+      </div>
+      <div id="dashShotArea">
+        <div id="dashPieWrap" style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;margin-bottom:24px;justify-content:center"></div>
+        <div class="tablewrap" id="dashTableWrap"></div>
+      </div>
+    </section>
+
+    <!-- Supervisor Management (DGO only) -->
+    <section id="supPane" hidden>
+      <div class="card" style="margin-bottom:24px">
+        <h2 style="margin:0 0 8px">নতুন সুপারভাইজার যোগ করুন</h2>
+        <p class="lead" style="margin-bottom:16px">শুধু DGO এই অংশ ব্যবহার করতে পারবেন।</p>
+        <div class="grid">
+          <div class="field"><label for="supCode">SUP Code</label><input id="supCode" placeholder="যেমন: RYZJES01SUP06"><span class="err"></span></div>
+          <div class="field"><label for="supPhone">Phone</label><input id="supPhone" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX"><span class="err"></span></div>
+          <div class="field"><label for="supName">Name</label><input id="supName" placeholder="নাম"><span class="err"></span></div>
+          <div class="field"><label for="supHouse">DD Code / House Code</label><input id="supHouse" placeholder="যেমন: RYZJES01 অথবা RYZJES02, RYZMAG01"><span class="err"></span><small style="color:var(--muted)">একাধিক হাউস হলে কমা দিয়ে লিখুন</small></div>
+        </div>
+        <div class="actions" style="margin-top:16px">
+          <button class="btn btn-primary" type="button" id="addSupBtn">সুপারভাইজার যোগ করুন</button>
+        </div>
+      </div>
+      <p class="count" id="supCountText"></p>
+      <div class="tablewrap" id="supTableWrap"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>RYZE Field Force Data · v1.3.0</div>
+    <div>Developed by <strong>Tanjim Mostofa</strong> · Digital Growth Officer (DGO), RYZE</div>
+  </footer>
+</div>
+
+<div class="modal" id="detailModal" hidden role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+  <div class="modal-box">
+    <button type="button" class="modal-x" data-close aria-label="বন্ধ করুন">✕</button>
+    <div id="detailShot">
+      <div class="modal-head"><h2 id="detailTitle"></h2><div class="modal-sub" id="detailSub"></div></div>
+      <div class="modal-body" id="detailBody"></div>
+    </div>
+    <div class="modal-foot" id="detailFoot"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+/* =========================================================
+   সেটিংস
+   Google Apps Script Deploy করে যে Web App URL পাবেন,
+   সেটা নিচের API_URL-এ বসান (…/exec দিয়ে শেষ হতে হবে)।
+   ========================================================= */
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbxbQCviF3QrkOaxn3Ms2tCGGC1WnQrIzV6qxurz5GVcdetlxW7mumaU_r1FTbtojachsw/exec",
+  STORAGE_KEY: "ryze_ff_records_v1",
+  SESSION_KEY: "ryze_ff_session_v1"
+};
+
+const FIELDS = [
+  ["dd_code","DD Code"],["dd_name","DD Name"],["rso_code","RSO Code / SUP Code"],["pool_phone","Pool Phone"],["own_retail_code","Own Retail Code"],
+  ["nid","NID"],["rid","RID"],["name","Name"],["rg_name","RG Name"],["rg_code","RG Code"],
+  ["scanner_sl","Scanner SL No."],["bank_account","Bank Account"],["designation","Designation"],
+  ["joining_date","Joining Date"],["date_of_birth","Date of Birth"],
+  ["blood_group","Blood Group"],["education","Education (Max)"],["father_name","Father's Name"],["mother_name","Mother's Name"],
+  ["present_address","Present Address"],["permanent_address","Permanent Address"],
+  ["emergency_name","Emergency Contact Name"],["emergency_phone","Emergency Contact Number"],["emergency_relation","Relation"],
+  ["status","Status"]
+];
+const ident = r => r.rid ? "RID "+r.rid : "NID "+r.nid;
+
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const BD_PHONE = /^01[3-9]\d{8}$/;
+
+/* ---------- ডিজিট রূপান্তর (বাংলা -> ইংরেজি) ---------- */
+const bn2en = s => String(s).replace(/[০-৯]/g, d => "০১২৩৪৫৬৭৮৯".indexOf(d));
+const clean = s => bn2en(s).trim();
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg, bad=false){
+  const t = $("#toast"); t.textContent = msg; t.className = "toast" + (bad?" bad":""); t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.hidden=true, 3200);
+}
+
+/* ---------- Session ---------- */
+let session = null;
+try{ session = JSON.parse(sessionStorage.getItem(CONFIG.SESSION_KEY)||"null"); }catch(e){}
+
+let role = "DGO";
+function setRole(r){
+  role = r;
+  $("#tabDGO").setAttribute("aria-selected", r==="DGO");
+  $("#tabSUP").setAttribute("aria-selected", r==="SUP");
+  $("#loginIdLabel").textContent = r==="DGO" ? "DGO ID" : "SUP Code";
+  $("#loginId").value = ""; clearErr($("#f_loginId")); clearErr($("#f_loginPhone"));
+}
+$("#tabDGO").onclick = ()=>setRole("DGO");
+$("#tabSUP").onclick = ()=>setRole("SUP");
+
+function setErr(field,msg){ field.classList.add("invalid"); $(".err",field).textContent = msg; }
+function clearErr(field){ field.classList.remove("invalid"); $(".err",field).textContent = ""; }
+
+$("#loginForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const idF=$("#f_loginId"), phF=$("#f_loginPhone");
+  const id = clean($("#loginId").value);
+  const ph = clean($("#loginPhone").value);
+  clearErr(idF); clearErr(phF);
+  let ok = true;
+  if(!id){ setErr(idF, role==="DGO" ? "DGO ID লিখুন" : "SUP Code লিখুন"); ok=false; }
+  if(!BD_PHONE.test(ph)){ setErr(phF, "সঠিক ১১ ডিজিটের ফোন নাম্বার দিন"); ok=false; }
+  if(!ok) return;
+  const btn = e.submitter, btnTxt = btn ? btn.textContent : ""; if(btn){ btn.disabled = true; btn.textContent = "যাচাই হচ্ছে…"; }
+  try{
+    const j = await callApi({action:"login", role, id, phone:ph});
+    session = j.user;   // {role, id, name, phone, dgo_id} — Users শিট থেকে আসা
+    sessionStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify(session));
+    enterApp();
+  }catch(err){
+    if(err.message==="not_found") setErr(phF, "ID/কোড আর ফোন নাম্বার তালিকার সাথে মেলেনি");
+    else toast("সার্ভারের সাথে যোগাযোগ হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।", true);
+  }
+  if(btn){ btn.disabled = false; btn.textContent = btnTxt; }
+});
+
+$("#logoutBtn").onclick = ()=>{
+  sessionStorage.removeItem(CONFIG.SESSION_KEY); session = null;
+  gen++; recP = null; records = []; loaded = false; loadErr = false; recT = 0; clearCache(); closeDetail();
+  $("#appView").hidden = true; $("#loginView").hidden = false;
+  $("#loginForm").reset(); setRole("DGO");
+};
+
+function enterApp(){
+  $("#loginView").hidden = true; $("#appView").hidden = false;
+  $("#whoRole").textContent = session.role==="DGO" ? "DGO" : "Supervisor";
+  $("#whoId").textContent = (session.name ? session.name + " · " : "") + session.id + " · " + session.phone;
+  const isDgo = session.role==="DGO";
+  $("#reqLabel").textContent = isDgo ? "অনুমোদন" : "আমার অনুরোধ";
+  $("#submitBtn").textContent = isDgo ? "জমা দিন" : "অনুমোদনের জন্য পাঠান";
+  $("#formLead").textContent = isDgo ? "সব ঘর পূরণ করে “জমা দিন” চাপুন।" : "সব ঘর পূরণ করে পাঠান। DGO অনুমোদন দিলে তথ্য পোর্টালে যোগ হবে।";
+  // সুপারভাইজার ট্যাব শুধু DGO দেখবে
+  if($("#tabSup")) $("#tabSup").hidden = !isDgo;
+  setupDdField();
+  exitEdit(); showTab("form");
+  // তিনটা তথ্য একসাথে আগে থেকেই আনা হচ্ছে, যাতে ট্যাব বদলালে অপেক্ষা করতে না হয়
+  loadRecords(true).then(()=>render());
+  fetchCached("houses", fetchHouses).catch(()=>{});
+  if(isDgo) fetchCached("users", fetchUsers).catch(()=>{});
+}
+
+/* ---------- Live allocation (Google Sheet → Website) ---------- */
+function allocHintFor(houses){
+  const el = $("#allocHint"), inp = $("#dd_code");
+  if(!el || !inp) return;
+  const code = clean(inp.value);
+  if(!code){ el.textContent = ""; return; }
+  const h = (houses||[]).find(x => String(x.house_code||x.dd_code||"").trim() === code);
+  if(!h){ el.textContent = ""; return; }
+  const left = Math.max(0, (h.allocation||0) - (h.current||0));
+  el.textContent = "অ্যালোকেশন " + (h.allocation||0) + " · বর্তমান " + (h.current||0) + " · বাকি " + left + " জন";
+  el.style.color = left===0 ? "#c0392b" : "var(--muted)";
+}
+// জমা দেওয়ার পর সার্ভারকে আবার না ডেকে ক্যাশের সংখ্যা নিজেই বাড়াও/কমাও
+function bumpHouse(code, d){
+  const hs = getCached("houses"); if(!hs) return;
+  const h = hs.find(x=>String(x.house_code||x.dd_code||"").trim()===String(code||"").trim());
+  if(h){ h.current = Math.max(0, (h.current||0) + d); h.remaining = Math.max(0, (h.allocation||0) - h.current); }
+  allocHintFor(hs);
+}
+async function refreshAllocHint(force){
+  try{ allocHintFor(await fetchCached("houses", fetchHouses, {force})); }catch(e){}
+}
+if($("#dd_code")) $("#dd_code").addEventListener("input", ()=>allocHintFor(getCached("houses")));
+// প্রতি ২০ সেকেন্ডে শিট থেকে নতুন অ্যালোকেশন আনো (ট্যাব খোলা থাকলে)
+setInterval(()=>{
+  if(!session || document.hidden) return;
+  if(curTab==="dash") renderDashboard(true);        // শুধু ড্যাশবোর্ড খোলা থাকলে নতুন অ্যালোকেশন আনো
+}, 45000);
+
+/* ---------- সুপারভাইজারের ফর্মে DD Code: শুধু তার হাউসগুলো থেকে বেছে নেবে ---------- */
+function setupDdField(){
+  const cur = $("#dd_code"); if(!cur) return;
+  const hs = (session && session.role==="SUP") ? supHouses() : [];
+  const isSel = cur.tagName==="SELECT";
+  if(!hs.length){
+    if(isSel){ const inp = document.createElement("input"); inp.id="dd_code"; inp.name="dd_code"; inp.required = true; cur.replaceWith(inp); inp.addEventListener("input", ()=>allocHintFor(getCached("houses"))); }
+    return;
+  }
+  const sel = isSel ? cur : document.createElement("select");
+  sel.id = "dd_code"; sel.name = "dd_code"; sel.required = true;
+  sel.innerHTML = (hs.length>1 ? '<option value="">নির্বাচন করুন</option>' : '') + hs.map((h,i)=>'<option value="'+esc(h)+'"'+(hs.length===1?' selected':'')+'>'+esc(h)+'</option>').join("");
+  if(!isSel){ cur.replaceWith(sel); sel.addEventListener("change", ()=>allocHintFor(getCached("houses"))); }
+}
+
+/* ---------- Tabs ---------- */
+let curTab = "form";
+function showTab(t){
+  curTab = t;
+  if(t==="form") refreshAllocHint(false);          // ক্যাশ ১৫ সেকেন্ডের বেশি পুরনো হলেই নতুন আনবে
+  if(t==="dash") renderDashboard(false);
+  $("#formPane").hidden = t!=="form";
+  $("#listPane").hidden = t!=="list";
+  $("#reqPane").hidden = t!=="req";
+  $("#dashPane").hidden = t!=="dash";
+  if($("#supPane")) $("#supPane").hidden = t!=="sup";
+  ["Form","List","Req","Dash","Sup"].forEach(n=>{
+    const btn = $("#tab"+n);
+    if(btn) btn.setAttribute("aria-selected", t===n.toLowerCase());
+  });
+  if(t!=="form"){
+    render();                                              // আগের তথ্য সাথে সাথে দেখাও
+    loadRecords().then(fresh=>{ if(fresh) render(); });    // ৬০ সেকেন্ডের পুরনো হলে পেছনে নতুন আনো
+  }
+}
+$("#tabForm").onclick = ()=>showTab("form");
+$("#tabList").onclick = ()=>showTab("list");
+$("#tabReq").onclick = ()=>showTab("req");
+$("#tabDash").onclick = ()=>showTab("dash");
+if($("#tabSup")) $("#tabSup").onclick = ()=>showTab("sup");
+/* ---------- আজকের তারিখ (বাংলাদেশ সময়) ---------- */
+function paintToday(){
+  const now = new Date(), tz = {timeZone:"Asia/Dhaka"};
+  let d, w;
+  try{
+    d = now.toLocaleDateString("bn-BD", Object.assign({day:"numeric", month:"long", year:"numeric"}, tz));
+    w = now.toLocaleDateString("bn-BD", Object.assign({weekday:"long"}, tz));
+  }catch(e){ d = now.toLocaleDateString(); w = ""; }
+  if($("#todayDate")) $("#todayDate").textContent = d;
+  if($("#todayDay")) $("#todayDay").textContent = w;
+}
+paintToday(); setInterval(paintToday, 60000);   // রাত ১২টার পর নিজে থেকে নতুন তারিখ
+
+function render(){ if(!session) return; updateCount(); if(curTab==="list") renderList(); if(curTab==="req") renderReq(); if(curTab==="dash") renderDashboard(); if(curTab==="sup") renderSupList(); }
+
+/* ---------- Storage layer ---------- */
+const storeKey = () => CONFIG.STORAGE_KEY;
+let records = [], loaded = false, loadErr = false, recT = 0, recP = null, gen = 0;
+const TTL = 60000;
+const HOUSE_TTL = 15000;   // Houses শিটের অ্যালোকেশন ১৫ সেকেন্ডের বেশি পুরনো থাকবে না   // ৬০ সেকেন্ডের মধ্যে একই তথ্য আবার সার্ভার থেকে আনা হবে না
+
+/* ছোট ক্যাশ: houses / users এর জন্য */
+const cache = {};
+function getCached(key){ return cache[key] ? cache[key].data : undefined; }
+function invalidate(){ [...arguments].forEach(k=>{ if(cache[k]) cache[k].t = 0; }); }
+function clearCache(){ Object.keys(cache).forEach(k=>delete cache[k]); }
+function fetchCached(key, fetcher, opt){
+  const force = !!(opt && opt.force);
+  const c = cache[key] || (cache[key] = {data:undefined, t:0, p:null});
+  if(c.p) return c.p;                                       // একই অনুরোধ চলছে, সেটাই ব্যবহার করো
+  if(!force && c.data!==undefined && Date.now()-c.t < (key==="houses"?HOUSE_TTL:TTL)) return Promise.resolve(c.data);
+  c.p = fetcher().then(d=>{ c.data = d; c.t = Date.now(); return d; }).finally(()=>{ c.p = null; });
+  return c.p;
+}
+const fetchHouses = () => callApi({action:"houses"}).then(j=>{
+  const all = j.houses || [];
+  if(session && session.role==="SUP"){ const hs = supHouses(); if(hs.length) return all.filter(h=>hs.includes(String(h.house_code||h.dd_code||"").trim())); }
+  return all;
+});
+const fetchUsers  = () => callApi({action:"listUsers"}).then(j=>j.users || []);
+// সব অনুরোধ সার্ভারে যায়; সার্ভার প্রতিবার ID + ফোন Users শিট থেকে যাচাই করে
+async function callApi(payload){
+  const body = Object.assign({}, payload);
+  if(session) body.auth = {role:session.role, id:session.id, phone:session.phone};
+  // text/plain রাখা হয়েছে যাতে Google Apps Script-এ CORS preflight না লাগে
+  const r = await fetch(CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error("net");
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error || "server");
+  return j;
+}
+async function apiList(){
+  if(CONFIG.API_URL){
+    const j = await callApi({action:"list"});
+    return j.records || [];
+  }
+  try{ return JSON.parse(localStorage.getItem(storeKey())||"[]"); }catch(e){ return []; }
+}
+async function apiPost(payload){
+  if(CONFIG.API_URL){
+    await callApi(payload);
+    return;
+  }
+  const all = await apiList();
+  if(payload.action==="add") all.push(payload.record);
+  if(payload.action==="update"){ const x = all.find(x=>x.id===payload.id); if(x) Object.assign(x, payload.patch); }
+  if(payload.action==="delete"){ const i = all.findIndex(x=>x.id===payload.id); if(i>-1) all.splice(i,1); }
+  localStorage.setItem(storeKey(), JSON.stringify(all));
+}
+// true ফেরত দেয় যদি সার্ভার থেকে নতুন তথ্য এসে থাকে
+function loadRecords(force){
+  if(recP) return recP;
+  if(!force && loaded && Date.now()-recT < TTL) return Promise.resolve(false);
+  const g = gen;
+  recP = apiList().then(list=>{
+    if(g!==gen) return false;                               // এর মধ্যে লগআউট হয়ে গেলে ফেলে দাও
+    records = list.map(autoStatus); loaded = true; loadErr = false; recT = Date.now(); warmLibs(); return true;
+  }).catch(()=>{
+    if(g===gen){ if(!loaded) loadErr = true; toast("তথ্য লোড করা যায়নি। ইন্টারনেট দেখে রিফ্রেশ করুন।", true); }
+    return false;
+  }).finally(()=>{ if(g===gen) recP = null; });
+  return recP;
+}
+const recDgo = r => r.dgo_id || (r.submitted_role==="DGO" ? r.submitted_by : "");
+const approvalOf = r => r.approval || "approved";
+// এডিটের অপেক্ষায় থাকা রেকর্ড: approval "approved"-ই থাকে, শুধু edit_patch-এ প্রস্তাবিত পরিবর্তন জমা থাকে
+const editPatchOf = r => { try{ const o = JSON.parse(r.edit_patch||""); return (o && typeof o==="object") ? o : null; }catch(e){ return null; } };
+const isEditPending = r => approvalOf(r)==="approved" && !!editPatchOf(r) && Object.keys(editPatchOf(r)).length>0;
+// Supervisor-এর সাথে ট্যাগ করা সব হাউস কোড (একটা, দুইটা, তিনটা… যতগুলো থাকে)
+const HOUSE_SPLIT = /[,;|\/\s]+/;
+function splitHouses(v){
+  if(Array.isArray(v)) return v.flatMap(splitHouses);
+  return String(v||"").split(HOUSE_SPLIT).map(x=>x.trim()).filter(Boolean);
+}
+function supHouses(){
+  if(!session || session.role!=="SUP") return [];
+  return [...new Set([...splitHouses(session.house_codes), ...splitHouses(session.house_code)])];
+}
+// Supervisor: তার সব assigned house_code এর রেকর্ড দেখবে
+const visible = () => records.filter(r => {
+  if (recDgo(r) !== session.dgo_id) return false;
+  if (!["approved","pending_delete"].includes(approvalOf(r))) return false;
+  if (session.role === "SUP") {
+    const hs = supHouses();
+    if (hs.length) return hs.includes(String(r.dd_code || "").trim());
+    return r.submitted_by === session.id; // fallback
+  }
+  return true;
+});
+// অনুমোদনের তালিকা
+const requests = () => records.filter(r=>{
+  if(recDgo(r)!==session.dgo_id) return false;
+  const a = approvalOf(r);
+  if(session.role==="DGO") return a==="pending_add" || a==="pending_delete" || isEditPending(r);
+  if(isEditPending(r)) return r.edit_requested_by===session.id;
+  if(a==="pending_delete") return r.delete_requested_by===session.id;
+  return (a==="pending_add" || a==="rejected") && r.submitted_by===session.id;
+});
+function updateCount(){
+  const n = visible().length; $("#countBadge").textContent = n ? "("+n+")" : "";
+  const q = session.role==="DGO" ? requests().length : 0;
+  $("#reqDot").hidden = !q; $("#reqDot").textContent = q;
+}
+
+/* ---------- Form validation & submit ---------- */
+const form = $("#dataForm");
+function validateField(el){
+  const wrap = el.closest(".field"); const v = clean(el.value); let msg = "";
+  if(!v){
+    if(!el.required){ clearErr(wrap); return true; }
+    msg = el.tagName==="SELECT" ? "একটি অপশন নির্বাচন করুন" : "এই ঘরটি পূরণ করুন";
+  }
+  else if(el.name==="nid" && !/^(\d{10}|\d{13}|\d{17})$/.test(v)) msg = "NID ১০, ১৩ বা ১৭ ডিজিটের হতে হবে";
+  else if((el.name==="pool_phone"||el.name==="emergency_phone") && !BD_PHONE.test(v)) msg = "সঠিক ১১ ডিজিটের ফোন নাম্বার দিন";
+  else if(el.name==="bank_account" && !/^[0-9\-\s]{6,}$/.test(v)) msg = "সঠিক অ্যাকাউন্ট নাম্বার দিন";
+  if(!msg && v && DUP_FIELDS.includes(el.name)){
+    // এডিটের সময় শুধু বদলানো ঘরগুলোই দেখা হয়
+    const orig = editingId ? (records.find(x=>x.id===editingId)||{}) : null;
+    const changed = !orig || dupNorm(el.name, orig[el.name]) !== dupNorm(el.name, v);
+    if(changed){ const o = findDupLocal(el.name, v, editingId); if(o) msg = dupMsgText(el.name, o); }
+  }
+  msg ? setErr(wrap,msg) : clearErr(wrap);
+  return !msg;
+}
+// সার্ভার থেকে "duplicate:<ঘর>" এরর এলে সেই ঘরে লেখা দেখাও
+function handleDupError(err){
+  const m = /^duplicate:(\w+)/.exec((err&&err.message)||""); if(!m) return false;
+  const k = m[1], el = form.elements[k];
+  if(el){ setErr(el.closest(".field"), dupMsgText(k, null)); el.focus(); }
+  toast(dupMsgText(k, null), true);
+  return true;
+}
+$$("input:not(#sameAddr),select,textarea",form).forEach(el=>{
+  el.addEventListener("blur",()=>{ if(el.value) validateField(el); });
+  el.addEventListener("input",()=>{ if(el.closest(".field").classList.contains("invalid")) validateField(el); });
+});
+form.addEventListener("reset",()=>{ $$(".field",form).forEach(clearErr); if(editingId) setTimeout(exitEdit,0); });
+$("#sameAddr").addEventListener("change",e=>{
+  const pa=form.elements.present_address, pm=form.elements.permanent_address;
+  if(e.target.checked){ pm.value=pa.value; pm.readOnly=true; clearErr(pm.closest(".field")); } else pm.readOnly=false;
+});
+form.elements.present_address.addEventListener("input",()=>{ if($("#sameAddr").checked) form.elements.permanent_address.value=form.elements.present_address.value; });
+
+/* ---------- Designation অনুযায়ী Scanner SL ---------- */
+// RYZE General ও Online RYZE General এ Scanner SL লাগে না। RYZE Rangers এ আবশ্যক।
+const NO_SCANNER = new Set(["RYZE General","Online RYZE General"]);
+function applyDesignation(){
+  const d = form.elements.designation.value, sc = form.elements.scanner_sl, wrap = $("#scannerField");
+  const hide = NO_SCANNER.has(d);
+  wrap.hidden = hide;
+  if(hide){ sc.value = ""; sc.required = false; clearErr(wrap); }
+  else sc.required = (d === "RYZE Rangers");
+}
+function ensureDesignationOption(v){
+  const sel = form.elements.designation;
+  if(v && ![...sel.options].some(o=>o.value===v)){ const o = document.createElement("option"); o.textContent = v; sel.appendChild(o); }
+}
+form.elements.designation.addEventListener("change", applyDesignation);
+form.addEventListener("reset", ()=>setTimeout(applyDesignation, 0));
+setTimeout(applyDesignation, 0);
+
+/* ---------- Edit mode ---------- */
+let editingId = null;
+function exitEdit(){
+  editingId = null; $("#formTitle").textContent = "নতুন তথ্য যোগ করুন"; $("#editBar").hidden = true; $("#cancelEditBtn").hidden = true;
+  $("#sameAddr").checked = false; form.elements.permanent_address.readOnly = false;
+  $("#submitBtn").textContent = session && session.role==="DGO" ? "জমা দিন" : "অনুমোদনের জন্য পাঠান";
+}
+function startEdit(id){
+  const r = records.find(x=>x.id===id); if(!r) return;
+  if(isEditPending(r)){ toast("এই তথ্যের এডিট অনুমোদনের অপেক্ষায় আছে। অনুমোদন হওয়া পর্যন্ত আবার এডিট করা যাবে না।", true); return; }
+  form.reset(); editingId = id; ensureDesignationOption(r.designation);
+  FIELDS.forEach(([k])=>{ if(form.elements[k]) form.elements[k].value = DATE_KEYS.has(k) ? fmtDate(r[k]) : (r[k] ?? ""); });
+  applyDesignation();
+  $("#formTitle").textContent = "তথ্য এডিট করুন";
+  $("#editBar").textContent = r.name + " (" + ident(r) + ") এর তথ্য এডিট করছেন";
+  $("#editBar").hidden = false; $("#cancelEditBtn").hidden = false; $("#submitBtn").textContent = "আপডেট করুন";
+  showTab("form"); window.scrollTo({top:0,behavior:"smooth"});
+}
+$("#cancelEditBtn").onclick = ()=>{ form.reset(); exitEdit(); };
+
+form.addEventListener("submit", async e=>{
+  e.preventDefault();
+  const els = $$("input:not(#sameAddr),select,textarea",form);
+  const results = els.map(validateField);
+  if(results.includes(false)){ els[results.indexOf(false)].focus(); toast("লাল চিহ্নিত ঘরগুলো ঠিক করুন", true); return; }
+
+  const rec = {};
+  FIELDS.forEach(([k])=>rec[k] = clean(form.elements[k].value));
+  if(editingId){
+    const btn = $("#submitBtn"); btn.disabled = true; btn.textContent = "আপডেট হচ্ছে…";
+    try{
+      const orig = records.find(x=>x.id===editingId) || {};
+      const nowIso = new Date().toISOString();
+      if(session.role==="DGO"){
+        // DGO নিজে এডিট করলে সরাসরি একই রেকর্ডে বদলাবে, নতুন কিছু যোগ হবে না
+        const patch = Object.assign({}, rec, {edit_patch:"", edit_requested_by:"", edit_requested_phone:"", edit_requested_at:"", edited_by:session.id, edited_role:session.role, edited_at:nowIso});
+        await patchRec(editingId, patch);
+        form.reset(); exitEdit(); toast("তথ্য আপডেট হয়েছে"); render();
+      }else{
+        // সুপারভাইজারের এডিট: শুধু পরিবর্তনগুলো জমা থাকে, DGO অনুমোদন দিলে একই রেকর্ডে বসে
+        const diff = {};
+        FIELDS.forEach(([k])=>{ const a = DATE_KEYS.has(k) ? fmtDate(orig[k]) : String(orig[k]??""); if(String(rec[k]??"") !== String(a??"")) diff[k] = rec[k]; });
+        if(!Object.keys(diff).length){ toast("কোনো তথ্য বদলায়নি", true); btn.disabled = false; btn.textContent = "আপডেট করুন"; return; }
+        await patchRec(editingId, {edit_patch:JSON.stringify(diff), edit_requested_by:session.id, edit_requested_phone:session.phone, edit_requested_at:nowIso});
+        form.reset(); exitEdit(); toast("এডিটের অনুরোধ DGO-র কাছে পাঠানো হয়েছে"); render();
+      }
+    }catch(err){ if(!handleDupError(err)) toast("আপডেট হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।", true); }
+    btn.disabled = false; btn.textContent = editingId ? "আপডেট করুন" : (session.role==="DGO" ? "জমা দিন" : "অনুমোদনের জন্য পাঠান");
+    return;
+  }
+
+  // House/DD Allocation চেক
+  // আলাদা সার্ভার কল ছাড়াই ক্যাশে থাকা হিসাব দিয়ে সতর্কতা; পূর্ণ হয়ে গেলে সার্ভার জমার সময়ই আটকাবে
+  if(rec.dd_code){
+    const hs = getCached("houses") || [];
+    const h = hs.find(x=>String(x.house_code||x.dd_code||"").trim()===rec.dd_code);
+    if(h && h.allocation > 0){
+      const left = Math.max(0, h.allocation - (h.current||0));
+      if(left <= 0){ toast("এই House/DD Code ("+rec.dd_code+") এর অ্যালোকেশন পূর্ণ। নতুন কর্মী যোগ করা যাবে না।", true); return; }
+      if(left <= 3 && !confirm("এই House-এ মাত্র "+left+" জন বাকি আছে। তবুও যোগ করবেন?")) return;
+    }
+  }
+
+  rec.id = "r" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  rec.submitted_by = session.id; rec.submitted_role = session.role; rec.submitted_phone = session.phone;
+  rec.submitted_at = new Date().toISOString();
+  rec.dgo_id = session.dgo_id;
+  rec.approval = session.role==="DGO" ? "approved" : "pending_add";
+
+  const btn = $("#submitBtn"); btn.disabled = true; btn.textContent = "জমা হচ্ছে…";
+  try{
+    await apiPost({action:"add", record:rec});
+    records.push(rec); bumpHouse(rec.dd_code, 1); invalidate("houses"); updateCount();
+    form.reset(); toast(session.role==="DGO" ? "তথ্য জমা হয়েছে" : "DGO-র অনুমোদনের জন্য পাঠানো হয়েছে");
+  }catch(err){
+    if(err.message === "house_full") toast("এই House-এর অ্যালোকেশন পূর্ণ। যোগ করা যায়নি।", true);
+    else if(!handleDupError(err)) toast("জমা হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।", true);
+  }
+  btn.disabled = false; btn.textContent = session.role==="DGO" ? "জমা দিন" : "অনুমোদনের জন্য পাঠান";
+});
+
+/* ---------- List ---------- */
+const esc = s => String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function rowAction(r){
+  if(approvalOf(r)==="pending_delete") return '<span class="tag wait">বাদ দেওয়ার অনুমোদনের অপেক্ষায়</span>';
+  if(isEditPending(r)) return '<span class="tag edit">এডিট অনুমোদনের অপেক্ষায়</span>';
+  const ed = '<button class="linkbtn ed" data-edit="'+esc(r.id)+'" type="button">এডিট</button>';
+  return ed + (session.role==="DGO"
+    ? '<button class="linkbtn" data-del="'+esc(r.id)+'" type="button">মুছুন</button>'
+    : '<button class="linkbtn" data-reqdel="'+esc(r.id)+'" type="button">বাদ দেওয়ার অনুরোধ</button>');
+}
+/* ---------- Category / Supervisor filter helpers ---------- */
+const catOf = r => String(r.category || r.designation || "").trim();
+function supNameOf(r){
+  const code = String(r.submitted_by||"").trim();
+  if(r.submitted_role==="DGO") return "DGO " + code;
+  const u = (getCached("users")||[]).find(x=>String(x.code)===code);
+  if(u && u.name) return u.name;
+  if(session && session.role==="SUP" && code===session.id && session.name) return session.name;
+  return code || "—";
+}
+function applyExtraFilters(rows){
+  const cf = ($("#catFilter")&&$("#catFilter").value)||"", sf = ($("#supFilter")&&$("#supFilter").value)||"";
+  if(cf) rows = rows.filter(r=>catOf(r)===cf);
+  if(sf) rows = rows.filter(r=>supNameOf(r)===sf);
+  return rows;
+}
+function populateExtraFilters(){
+  const base = visible();
+  [["#catFilter",catOf,"সব ক্যাটাগরি"],["#supFilter",supNameOf,"সব সুপারভাইজার"]].forEach(([id,fn,all])=>{
+    const sel=$(id); if(!sel) return;
+    const cur=sel.value;
+    const vals=[...new Set(base.map(fn).filter(v=>v&&v!=="—"))].sort();
+    sel.innerHTML='<option value="">'+all+'</option>'+vals.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");
+    if(cur&&vals.includes(cur)) sel.value=cur;
+  });
+}
+function populateDdFilter(){
+  const sel = $("#ddFilter");
+  if(!sel) return;
+  const current = sel.value;
+  const codes = [...new Set(visible().map(r => String(r.dd_code||"").trim()).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">সব House / DD Code</option>' + codes.map(c => '<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");
+  if(current && codes.includes(current)) sel.value = current;
+}
+function renderList(){
+  if(!loaded){ $("#countText").textContent = ""; $("#tableWrap").innerHTML = '<div class="empty">'+(loadErr ? "তথ্য লোড করা যায়নি। উপরের রিফ্রেশ বাটন চাপুন।" : "লোড হচ্ছে…")+'</div>'; return; }
+  const q = clean($("#search").value).toLowerCase();
+  const ddFilter = ($("#ddFilter") && $("#ddFilter").value) || "";
+  let rows = visible();
+  if(ddFilter) rows = rows.filter(r => String(r.dd_code||"").trim() === ddFilter);
+  rows = applyExtraFilters(rows);
+  rows = rows.filter(r => !q || FIELDS.some(([k]) => String(r[k]??"").toLowerCase().includes(q)))
+             .sort((a,b) => (b.submitted_at||"").localeCompare(a.submitted_at||""));
+  $("#countText").textContent = rows.length + " টি তথ্য";
+  if(!rows.length){
+    $("#tableWrap").innerHTML = '<div class="empty">'+(visible().length ? "কিছু পাওয়া যায়নি। অন্য শব্দে খুঁজুন।" : "এখনো কোনো তথ্য জমা হয়নি। “তথ্য জমা দিন” ট্যাব থেকে প্রথম তথ্য যোগ করুন।")+'</div>';
+    return;
+  }
+  const head = FIELDS.map(([,l])=>"<th>"+esc(l)+"</th>").join("") + "<th>জমা দিয়েছেন</th><th></th>";
+  const body = rows.map(r=>'<tr data-row="'+esc(r.id)+'">'+FIELDS.map(([k])=>{
+    const v = r[k];
+    if(k==="status") return '<td><span class="tag '+esc(v)+'">'+esc(v)+"</span></td>";
+    if(k==="name") return '<td><button class="namebtn" data-view="'+esc(r.id)+'" type="button">'+esc(v)+"</button></td>";
+    return "<td>"+esc(DATE_KEYS.has(k) ? fmtDate(v) : v)+"</td>";
+  }).join("") + "<td>"+esc(r.submitted_role)+" "+esc(r.submitted_by)+'</td><td>'+rowAction(r)+'</td></tr>').join("");
+  $("#tableWrap").innerHTML = "<table><thead><tr>"+head+"</tr></thead><tbody>"+body+"</tbody></table>";
+  populateDdFilter(); populateExtraFilters();
+}
+let searchT; $("#search").addEventListener("input", ()=>{ clearTimeout(searchT); searchT = setTimeout(renderList, 180); });
+if($("#ddFilter")) $("#ddFilter").addEventListener("change", renderList);
+if($("#catFilter")) $("#catFilter").addEventListener("change", renderList);
+if($("#supFilter")) $("#supFilter").addEventListener("change", renderList);
+$("#refreshBtn").onclick = async()=>{ const ok = await loadRecords(true); render(); if(ok) toast("তালিকা হালনাগাদ হয়েছে"); };
+// দ্রুত অপারেশন: আগে স্ক্রিনে বদলে দেয়, সার্ভারে পেছনে পাঠায়; ব্যর্থ হলে আগের অবস্থায় ফেরায়
+async function runOp(id, op, okMsg, deferMsg){
+  const i = records.findIndex(x=>x.id===id); if(i<0) return;
+  const snap = Object.assign({}, records[i]);
+  const wasCounted = ["approved","pending_delete"].includes(approvalOf(snap));
+  if(op.remove) records.splice(i,1); else Object.assign(records[i], op.patch);
+  render(); if(okMsg && !deferMsg) toast(okMsg);
+  try{
+    await apiPost(op.remove ? {action:"delete", id} : {action:"update", id, patch:op.patch});
+    invalidate("houses");
+    if(okMsg && deferMsg) toast(okMsg);          // অনুমোদনের সফল বার্তা শুধু সার্ভার নিশ্চিত করার পরে
+  }catch(err){
+    const j = records.findIndex(x=>x.id===id);
+    if(op.remove) records.splice(Math.min(i,records.length), 0, snap);
+    else if(j>-1){ Object.keys(records[j]).forEach(k=>delete records[j][k]); Object.assign(records[j], snap); }
+    render();
+    const m = (err&&err.message)||"";
+    if(/^duplicate:/.test(m)) toast(dupMsgText(m.slice(10),null)+" — অনুমোদন করা যায়নি, আগের অবস্থায় ফেরানো হয়েছে", true);
+    else toast("সার্ভারে সেভ হয়নি, আগের অবস্থায় ফেরানো হয়েছে। আবার চেষ্টা করুন।", true);
+  }
+}
+// অনুমোদনের চাপ দেওয়ার সাথে সাথেই সমস্যা (ডুপ্লিকেট, অ্যালোকেশন পূর্ণ) ধরে; সমস্যা থাকলে বার্তা ফেরত দেয়
+function precheckApprove(r, kind){
+  const src = kind==="edit" ? (editPatchOf(r)||{}) : r;
+  for(const k of DUP_FIELDS){
+    if(!Object.prototype.hasOwnProperty.call(src,k)) continue;
+    const o = findDupLocal(k, src[k], r.id);
+    if(o) return dupMsgText(k, o);
+  }
+  if(kind==="add"){
+    const hs = getCached("houses") || [], code = String(r.dd_code||"").trim();
+    const h = hs.find(x=>String(x.house_code||x.dd_code||"").trim()===code);
+    if(h && h.allocation > 0 && (h.current||0) >= h.allocation) return "এই House ("+code+") এর অ্যালোকেশন পূর্ণ";
+  }
+  return null;
+}
+async function patchRec(id, patch){
+  await apiPost({action:"update", id, patch}); invalidate("houses");
+  const r = records.find(x=>x.id===id); if(r) Object.assign(r, patch);
+}
+async function removeRec(id){
+  await apiPost({action:"delete", id}); invalidate("houses"); records = records.filter(r=>r.id!==id);
+}
+const NO_DEL = {approval:"approved", delete_reason:"", delete_requested_by:"", delete_requested_phone:"", delete_requested_at:""};
+
+$("#tableWrap").addEventListener("click", async e=>{
+  const del = e.target.dataset?.del, rq = e.target.dataset?.reqdel, ed = e.target.dataset?.edit;
+  if(ed){ startEdit(ed); return; }
+  if(!del && !rq){
+    const v = e.target.closest("[data-view]"), tr = e.target.closest("tr[data-row]");
+    let id = null;
+    if(v) id = v.dataset.view;
+    else if(tr && !e.target.closest("button") && !String(window.getSelection()).trim()) id = tr.dataset.row;
+    if(id) showDetail(id);
+    return;
+  }
+  try{
+    if(del){
+      if(!confirm("এই কর্মীর সব তথ্য মুছে ফেলবেন?")) return;
+      runOp(del, {remove:true}, "তথ্য মুছে ফেলা হয়েছে");
+    }else if(rq){
+      const reason = prompt("কেন বাদ দিতে চান? (লিখতে পারেন, ফাঁকা রাখা যাবে)");
+      if(reason===null) return;
+      runOp(rq, {patch:{approval:"pending_delete", delete_reason:reason.trim(), delete_requested_by:session.id, delete_requested_phone:session.phone, delete_requested_at:new Date().toISOString()}}, "বাদ দেওয়ার অনুরোধ DGO-র কাছে পাঠানো হয়েছে");
+    }
+  }catch(err){ if(/^duplicate:/.test((err&&err.message)||"")){ const k=err.message.slice(10); toast(dupMsgText(k,null)+" — এডিট অনুমোদন করা যায়নি", true); } else toast("কাজটি হয়নি। আবার চেষ্টা করুন।", true); }
+});
+
+/* ---------- Approvals ---------- */
+const reqTime = r => approvalOf(r)==="pending_delete" ? (r.delete_requested_at||"") : isEditPending(r) ? (r.edit_requested_at||"") : (r.submitted_at||"");
+const labelOf = k => (FIELDS.find(f=>f[0]===k)||[k,k])[1];
+function diffHtml(r){
+  const p = editPatchOf(r); if(!p) return "";
+  return '<div class="diff">'+Object.keys(p).map(k=>{
+    const oldV = DATE_KEYS.has(k) ? fmtDate(r[k]) : r[k];
+    return '<div><b>'+esc(labelOf(k))+':</b> <s>'+esc(oldV||"—")+'</s> → <i>'+esc(p[k]||"—")+'</i></div>';
+  }).join("")+'</div>';
+}
+function renderReq(){
+  const isDgo = session.role==="DGO";
+  if(!loaded){ $("#reqText").textContent = ""; $("#reqList").innerHTML = '<div class="empty card">'+(loadErr ? "লোড করা যায়নি। তালিকা ট্যাবে গিয়ে রিফ্রেশ চাপুন।" : "লোড হচ্ছে…")+'</div>'; return; }
+  const rows = requests().sort((a,b)=>reqTime(b).localeCompare(reqTime(a)));
+  $("#reqText").textContent = rows.length ? rows.length + " টি অনুরোধ" + (isDgo ? " আপনার অনুমোদনের অপেক্ষায়" : "") : "";
+  if(!rows.length){
+    $("#reqList").innerHTML = '<div class="empty card">'+(isDgo ? "অনুমোদনের অপেক্ষায় কোনো অনুরোধ নেই।" : "আপনার কোনো অনুরোধ নেই।")+"</div>";
+    return;
+  }
+  $("#reqList").innerHTML = rows.map(r=>{
+    const a = approvalOf(r), del = a==="pending_delete", ed = isEditPending(r), id = esc(r.id);
+    const tag = a==="rejected" ? '<span class="tag rej">DGO বাতিল করেছেন</span>' : del ? '<span class="tag del">বাদ দেওয়ার অনুরোধ</span>' : ed ? '<span class="tag edit">এডিটের অনুরোধ</span>' : '<span class="tag add">নতুন সদস্য যোগ</span>';
+    const by = del ? [r.delete_requested_by, r.delete_requested_phone] : ed ? [r.edit_requested_by, r.edit_requested_phone] : [r.submitted_by, r.submitted_phone];
+    const when = reqTime(r) ? new Date(reqTime(r)).toLocaleString("bn-BD") : "";
+    let note = "";
+    if(del && r.delete_reason) note = '<div class="reason">কারণ: '+esc(r.delete_reason)+"</div>";
+    if(ed) note = diffHtml(r);
+    if(a==="rejected" && r.reject_note) note = '<div class="reason">DGO-র মন্তব্য: '+esc(r.reject_note)+"</div>";
+    let btns;
+    if(isDgo){
+      btns = '<button class="btn btn-primary sm" data-approve="'+id+'" type="button">'+(del ? "অনুমোদন করে মুছুন" : ed ? "এডিট অনুমোদন করুন" : "অনুমোদন করুন")+'</button>'
+           + '<button class="btn btn-ghost sm" data-reject="'+id+'" type="button">বাতিল করুন</button>';
+    }else if(a==="rejected"){
+      btns = '<button class="btn btn-ghost sm" data-dismiss="'+id+'" type="button">তালিকা থেকে সরান</button>';
+    }else{
+      btns = '<span class="tag wait">DGO-র অপেক্ষায়</span><button class="btn btn-ghost sm" data-'+(del?"canceldel":ed?"canceledit":"withdraw")+'="'+id+'" type="button">অনুরোধ ফিরিয়ে নিন</button>';
+    }
+    return '<article class="req-card"><div>'+tag+'<h3><button class="namebtn" data-view="'+id+'" type="button">'+esc(r.name)+'</button> ('+esc(ident(r))+')</h3>'
+      + '<div class="meta">DD '+esc(r.dd_code)+', '+esc(r.designation)+', '+esc(r.status)+'</div>'
+      + '<div class="meta">অনুরোধকারী: SUP '+esc(by[0])+', '+esc(by[1])+(when ? ', '+esc(when) : '')+'</div>'+note+'</div>'
+      + '<div class="req-actions">'+btns+'</div></article>';
+  }).join("");
+}
+$("#reqList").addEventListener("click", async e=>{
+  const d = e.target.dataset || {};
+  if(d.view){ showDetail(d.view); return; }
+  const id = d.approve || d.reject || d.withdraw || d.dismiss || d.canceldel || d.canceledit; if(!id) return;
+  const r = records.find(x=>x.id===id); if(!r) return;
+  const del = approvalOf(r)==="pending_delete", ed = isEditPending(r), now = new Date().toISOString();
+  const NO_EDIT = {edit_patch:"", edit_requested_by:"", edit_requested_phone:"", edit_requested_at:""};
+  try{
+    if(d.canceledit){
+      runOp(id, {patch:NO_EDIT}, "এডিটের অনুরোধ ফিরিয়ে নেওয়া হয়েছে");
+    }else if(d.approve && ed && !del){
+      // একই রেকর্ডে শুধু তথ্য বদলাবে, নতুন কপি যোগ হবে না
+      const bad = precheckApprove(r, "edit");
+      if(bad){ toast(bad+" — অনুমোদন করা যায়নি", true); return; }
+      runOp(id, {patch:Object.assign({}, editPatchOf(r), NO_EDIT, {edited_by:r.edit_requested_by, edited_role:"SUP", edited_at:now, approved_by:session.id, approved_at:now})}, "এডিট অনুমোদন হয়েছে, তথ্য আপডেট হয়েছে", true);
+    }else if(d.reject && ed && !del){
+      const note = prompt("বাতিলের কারণ লিখুন (ফাঁকা রাখা যাবে)"); if(note===null) return;
+      runOp(id, {patch:NO_EDIT}, "এডিটের অনুরোধ বাতিল করা হয়েছে, আগের তথ্যই থাকছে");
+    }else if(d.approve){
+      if(del){
+        if(!confirm(r.name+" ("+ident(r)+") এর সব তথ্য মুছে যাবে। নিশ্চিত?")) return;
+        runOp(id, {remove:true}, "অনুমোদন হয়েছে, তথ্য মুছে ফেলা হয়েছে");
+      }else{
+        const bad = precheckApprove(r, "add");
+        if(bad){ toast(bad+" — অনুমোদন করা যায়নি", true); return; }
+        runOp(id, {patch:{approval:"approved", approved_by:session.id, approved_at:now}}, "অনুমোদন হয়েছে, তথ্য পোর্টালে যোগ হয়েছে", true);
+      }
+    }else if(d.reject){
+      const note = prompt("বাতিলের কারণ লিখুন (ফাঁকা রাখা যাবে)"); if(note===null) return;
+      if(del) runOp(id, {patch:NO_DEL}, "অনুরোধ বাতিল করা হয়েছে");
+      else runOp(id, {patch:{approval:"rejected", reject_note:note.trim(), rejected_by:session.id, rejected_at:now}}, "অনুরোধ বাতিল করা হয়েছে");
+    }else if(d.withdraw || d.dismiss){
+      runOp(id, {remove:true}, "অনুরোধ সরানো হয়েছে");
+    }else if(d.canceldel){
+      runOp(id, {patch:NO_DEL}, "অনুরোধ ফিরিয়ে নেওয়া হয়েছে");
+    }
+  }catch(err){ toast("কাজটি হয়নি। আবার চেষ্টা করুন।", true); }
+});
+
+/* ---------- Dashboard + Pie Chart ---------- */
+function makePieSVG(segments, size){
+  // segments: [{value, color, label}]
+  const total = segments.reduce((s,x)=>s+x.value, 0) || 1;
+  let angle = -90;
+  const r = size/2, cx = r, cy = r;
+  const paths = segments.map(seg => {
+    const pct = seg.value / total;
+    const sweep = pct * 360;
+    const a1 = angle * Math.PI / 180;
+    const a2 = (angle + sweep) * Math.PI / 180;
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+    const large = sweep > 180 ? 1 : 0;
+    const d = pct >= 0.999
+      ? `M ${cx} ${cy-r} A ${r} ${r} 0 1 1 ${cx-0.01} ${cy-r} Z`
+      : `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+    angle += sweep;
+    return `<path d="${d}" fill="${seg.color}" stroke="#FFFBF1" stroke-width="2"><title>${seg.label}: ${seg.value}</title></path>`;
+  }).join("");
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}</svg>`;
+}
+
+function drawDashboard(houses){
+  const wrap = $("#dashTableWrap"), pieWrap = $("#dashPieWrap"), txt = $("#dashText");
+  if(!wrap) return;
+  if(pieWrap) pieWrap.innerHTML = "";
+    if(!houses.length){
+      wrap.innerHTML = '<div class="empty">এখনো কোনো House Code যোগ করা হয়নি। Google Sheet-এর <b>Houses</b> শিটে <b>house_code</b> ও <b>allocation</b> যোগ করুন।</div>';
+      return;
+    }
+
+    const totalAlloc = houses.reduce((s,h)=>s + (h.allocation||0), 0);
+    const totalCurrent = houses.reduce((s,h)=>s + (h.current||0), 0);
+    const totalRemain = houses.reduce((s,h)=>s + (h.remaining||0), 0);
+
+    txt.textContent = houses.length + " টি হাউস · মোট অ্যালোকেশন " + totalAlloc + " · বর্তমান " + totalCurrent + " · বাকি " + totalRemain;
+
+    // Pie chart: Current vs Remaining (overall) + per-house small pies optional
+    if(pieWrap){
+      const colors = ["#12E3AB","#CDBBF5","#F28080","#D966A5","#9A82E3","#F1E5C4","#7FB4D8","#E49AC6"];
+      // Overall fill pie
+      const overallSeg = [
+        {value: totalCurrent, color: "#12E3AB", label: "বর্তমান কর্মী"},
+        {value: totalRemain, color: "#EFE6CF", label: "বাকি স্লট"}
+      ];
+      let pieHtml = '<div style="text-align:center"><div style="font-weight:700;margin-bottom:8px">মোট পূরণ</div>'
+        + makePieSVG(overallSeg, 160)
+        + '<div style="margin-top:8px;font-size:.9rem"><span style="color:#12E3AB">●</span> বর্তমান '+totalCurrent+' &nbsp; <span style="color:#bfae82">●</span> বাকি '+totalRemain+'</div></div>';
+
+      // Per house small pies (max 8)
+      const top = houses.slice(0, 8);
+      pieHtml += top.map((h,i) => {
+        const code = h.house_code || h.dd_code || "";
+        const seg = [
+          {value: h.current||0, color: colors[i % colors.length], label: "Current"},
+          {value: Math.max(0, (h.allocation||0)-(h.current||0)), color: "#EFE6CF", label: "Remaining"}
+        ];
+        return '<div style="text-align:center"><div style="font-weight:600;font-size:.85rem;margin-bottom:4px">'+esc(code)+'</div>'
+          + makePieSVG(seg, 100)
+          + '<div style="font-size:.8rem;color:var(--muted)">'+(h.current||0)+'/'+(h.allocation||0)+'</div></div>';
+      }).join("");
+
+      pieWrap.innerHTML = pieHtml;
+    }
+
+    const head = "<th>House Code</th><th>Total Allocation</th><th>Current</th><th>Remaining</th><th>Fill %</th><th>Progress</th>";
+    const body = houses.map(h=>{
+      const code = h.house_code || h.dd_code || "";
+      const fillPct = h.allocation > 0 ? Math.round((h.current / h.allocation) * 100) : 0;
+      const emptyPct = h.allocation > 0 ? Math.round((h.remaining / h.allocation) * 100) : 0;
+      let barColor = "#12E3AB";
+      if(fillPct >= 100) barColor = "#F28080";
+      else if(fillPct >= 70) barColor = "#D966A5";
+      const bar = '<div style="background:#EFE6CF;border-radius:8px;height:18px;width:140px;overflow:hidden;position:relative">'
+        + '<div style="background:'+barColor+';height:100%;width:'+Math.min(100,fillPct)+'%;border-radius:8px"></div>'
+        + '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">'+fillPct+'%</span></div>';
+      return "<tr><td><strong>"+esc(code)+"</strong></td><td>"+esc(h.allocation)+"</td><td>"+esc(h.current)+"</td>"
+        + "<td><strong>"+esc(h.remaining)+"</strong> <span style='color:var(--muted);font-size:.8rem'>("+emptyPct+"%)</span></td>"
+        + "<td>"+fillPct+"%</td><td>"+bar+"</td></tr>";
+    }).join("");
+    wrap.innerHTML = '<table style="min-width:700px"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';
+}
+async function renderDashboard(force){
+  const wrap = $("#dashTableWrap"), pieWrap = $("#dashPieWrap"), txt = $("#dashText");
+  if(!wrap) return;
+  const cached = getCached("houses");
+  if(cached) drawDashboard(cached);                          // আগের তথ্য সাথে সাথে দেখাও
+  else{
+    wrap.innerHTML = '<div class="empty">লোড হচ্ছে…</div>';
+    if(pieWrap) pieWrap.innerHTML = "";
+    txt.textContent = "House / DD Code অনুযায়ী Field Force Allocation";
+  }
+  try{
+    const houses = await fetchCached("houses", fetchHouses, {force});
+    if(houses !== cached) drawDashboard(houses);             // নতুন তথ্য এলে তবেই আবার আঁকো
+  }catch(err){
+    if(!cached) wrap.innerHTML = '<div class="empty">ড্যাশবোর্ড লোড করা যায়নি। ইন্টারনেট দেখে রিফ্রেশ করুন।</div>';
+    toast("ড্যাশবোর্ড লোড হয়নি", true);
+  }
+}
+$("#dashRefreshBtn").onclick = async()=>{ await renderDashboard(true); toast("ড্যাশবোর্ড হালনাগাদ হয়েছে"); };
+
+/* ---------- Screenshot helper ---------- */
+async function takeScreenshot(el, filename){
+  if(!el){ toast("স্ক্রিনশট নেওয়ার এলাকা পাওয়া যায়নি", true); return; }
+  if(typeof html2canvas !== "function"){
+    toast("স্ক্রিনশট লাইব্রেরি লোড হচ্ছে…");
+    try{ await loadLib("html2canvas"); }catch(e){ toast("স্ক্রিনশট লাইব্রেরি লোড হয়নি। ইন্টারনেট দেখুন।", true); return; }
+  }
+  try{
+    toast("স্ক্রিনশট তৈরি হচ্ছে…");
+    const canvas = await html2canvas(el, {
+      backgroundColor: "#F7F0DE",
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = filename || ("ryze_screenshot_" + Date.now() + ".png");
+    a.click();
+    toast("স্ক্রিনশট ডাউনলোড হয়েছে");
+  }catch(err){
+    toast("স্ক্রিনশট নেওয়া যায়নি", true);
+  }
+}
+if($("#listShotBtn")) $("#listShotBtn").onclick = () => takeScreenshot($("#listShotArea") || $("#tableWrap"), "ryze_list_" + Date.now() + ".png");
+if($("#dashShotBtn")) $("#dashShotBtn").onclick = () => takeScreenshot($("#dashShotArea") || $("#dashPane"), "ryze_dashboard_" + Date.now() + ".png");
+
+/* ---------- Supervisor Management ---------- */
+function drawSupList(users){
+  const wrap = $("#supTableWrap"), txt = $("#supCountText");
+  txt.textContent = new Set(users.map(u=>u.code)).size + " জন সুপারভাইজার";
+  if(!users.length){
+    wrap.innerHTML = '<div class="empty">এখনো কোনো সুপারভাইজার নেই। উপরে থেকে যোগ করুন।</div>';
+    return;
+  }
+  const head = "<th>SUP Code</th><th>Name</th><th>Phone</th><th>DD / House Code</th><th>DGO ID</th><th></th>";
+  // একই SUP Code একাধিক সারিতে থাকলে এক সারিতে সব হাউস দেখাও
+  const grouped = [];
+  users.forEach(u => {
+    const g = grouped.find(x => x.code === u.code);
+    if(g){ splitHouses(u.house_code).forEach(h => { if(!g.houses.includes(h)) g.houses.push(h); }); }
+    else grouped.push(Object.assign({}, u, {houses: splitHouses(u.house_code)}));
+  });
+  const body = grouped.map(u => "<tr>"
+    + "<td><strong>" + esc(u.code) + "</strong></td>"
+    + "<td>" + esc(u.name) + "</td>"
+    + "<td>" + esc(u.phone) + "</td>"
+    + "<td><strong>" + esc(u.houses.join(", ") || "—") + "</strong></td>"
+    + "<td>" + esc(u.dgo_id) + "</td>"
+    + '<td><button class="linkbtn" data-delsup="' + esc(u.code) + '" type="button">মুছুন</button></td>'
+    + "</tr>").join("");
+  wrap.innerHTML = "<table style='min-width:600px'><thead><tr>" + head + "</tr></thead><tbody>" + body + "</tbody></table>";
+}
+async function renderSupList(force){
+  const wrap = $("#supTableWrap");
+  if(!wrap || !session || session.role !== "DGO") return;
+  const cached = getCached("users");
+  if(cached) drawSupList(cached);
+  else wrap.innerHTML = '<div class="empty">লোড হচ্ছে…</div>';
+  try{
+    const users = await fetchCached("users", fetchUsers, {force});
+    if(users !== cached) drawSupList(users);
+  }catch(e){
+    if(!cached) wrap.innerHTML = '<div class="empty">লোড করা যায়নি।</div>';
+  }
+}
+$("#supTableWrap") && $("#supTableWrap").addEventListener("click", async e => {
+  const code = e.target.dataset?.delsup;
+  if(!code) return;
+  if(!confirm(code + " সুপারভাইজার মুছে ফেলবেন?")) return;
+  try{
+    await callApi({action: "deleteUser", code});
+    toast("সুপারভাইজার মুছে ফেলা হয়েছে");
+    invalidate("users"); renderSupList(true);
+  }catch(err){ toast("মুছা যায়নি", true); }
+});
+$("#addSupBtn") && $("#addSupBtn").addEventListener("click", async () => {
+  const code = clean($("#supCode").value);
+  const phone = clean($("#supPhone").value);
+  const name = clean($("#supName").value);
+  const house_code = clean($("#supHouse") ? $("#supHouse").value : "");
+  if(!code){ toast("SUP Code দিন", true); return; }
+  if(!BD_PHONE.test(phone)){ toast("সঠিক ১১ ডিজিটের ফোন দিন", true); return; }
+  if(!house_code){ toast("DD Code / House Code দিন", true); return; }
+  try{
+    await callApi({action: "addUser", user: {code, phone, name, house_code}});
+    toast("সুপারভাইজার যোগ হয়েছে (House: " + house_code + ")");
+    $("#supCode").value = ""; $("#supPhone").value = ""; $("#supName").value = "";
+    if($("#supHouse")) $("#supHouse").value = "";
+    invalidate("users"); renderSupList(true);
+  }catch(err){
+    if(err.message === "duplicate_code") toast("এই SUP Code আগেই আছে", true);
+    else if(err.message === "duplicate_phone") toast("এই ফোন নাম্বার আগেই আছে", true);
+    else toast("যোগ করা যায়নি", true);
+  }
+});
+
+/* ---------- CSV + Excel Download ---------- */
+function getFilteredRowsForExport(){
+  const q = clean($("#search") ? $("#search").value : "").toLowerCase();
+  const ddFilter = ($("#ddFilter") && $("#ddFilter").value) || "";
+  let rows = visible();
+  if(ddFilter) rows = rows.filter(r => String(r.dd_code||"").trim() === ddFilter);
+  rows = applyExtraFilters(rows);
+  if(q) rows = rows.filter(r => FIELDS.some(([k]) => String(r[k]??"").toLowerCase().includes(q)));
+  return rows.sort((a,b) => (b.submitted_at||"").localeCompare(a.submitted_at||""));
+}
+$("#csvBtn").onclick = ()=>{
+  const rows = getFilteredRowsForExport();
+  if(!rows.length){ toast("ডাউনলোড করার মতো তথ্য নেই", true); return; }
+  const cols = [...FIELDS.map(([k])=>k), "submitted_role","submitted_by","submitted_phone","submitted_at"];
+  const cell = v => '"' + String(v??"").replace(/"/g,'""') + '"';
+  const csv = "\uFEFF" + [cols.map(cell).join(","), ...rows.map(r=>cols.map(c=>cell(DATE_KEYS.has(c) ? fmtDate(r[c]) : r[c])).join(","))].join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download = "ryze_field_force_data.csv"; a.click(); URL.revokeObjectURL(a.href);
+  toast("CSV ডাউনলোড হয়েছে");
+};
+if($("#xlsxBtn")) $("#xlsxBtn").onclick = async ()=>{
+  const rows = getFilteredRowsForExport();
+  if(!rows.length){ toast("ডাউনলোড করার মতো তথ্য নেই", true); return; }
+  if(typeof XLSX === "undefined"){
+    toast("Excel লাইব্রেরি লোড হচ্ছে…");
+    try{ await loadLib("xlsx"); }catch(e){ toast("Excel লাইব্রেরি লোড হয়নি। ইন্টারনেট দেখুন।", true); return; }
+  }
+  const cols = [...FIELDS.map(([k])=>k), "submitted_role","submitted_by","submitted_phone","submitted_at"];
+  const headers = [...FIELDS.map(([,l])=>l), "Submitted Role","Submitted By","Submitted Phone","Submitted At"];
+  const data = [headers, ...rows.map(r => cols.map(c => DATE_KEYS.has(c) ? fmtDate(r[c]) : (r[c] ?? "")))];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Field Force");
+  XLSX.writeFile(wb, "ryze_field_force_data.xlsx");
+  toast("Excel ডাউনলোড হয়েছে");
+};
+
+/* ---------- Logo animation particles ---------- */
+(function(){
+  const g = document.getElementById("parts"); if(!g) return;
+  let seed = 7; const rnd = ()=> (seed = (seed*16807) % 2147483647) / 2147483647;
+  for(let i=0;i<38;i++){
+    const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    const x = 120 + rnd()*620, y = 420 + rnd()*300;
+    c.setAttribute("cx", x.toFixed(1)); c.setAttribute("cy", y.toFixed(1)); c.setAttribute("r", (1.6 + rnd()*3.4).toFixed(1));
+    c.style.setProperty("--dx", ((rnd()-.5)*90).toFixed(0)+"px");
+    c.style.setProperty("--dy", ((rnd()-.65)*80).toFixed(0)+"px");
+    c.style.animationDelay = (rnd()*.9).toFixed(2)+"s";
+    g.appendChild(c);
+  }
+})();
+
+/* ---------- দরকার হলে তবেই ভারী লাইব্রেরি লোড ---------- */
+const LIBS = {
+  xlsx: "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js",
+  html2canvas: "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+};
+const libP = {};
+function loadLib(name){
+  if(libP[name]) return libP[name];
+  libP[name] = new Promise((res,rej)=>{
+    const sc = document.createElement("script");
+    sc.src = LIBS[name]; sc.onload = res;
+    sc.onerror = ()=>{ delete libP[name]; rej(new Error("lib")); };
+    document.head.appendChild(sc);
+  });
+  return libP[name];
+}
+let libsWarm = false;
+function warmLibs(){   // মূল তথ্য আসার কিছু পরে, পেছনে লাইব্রেরি নামিয়ে রাখো
+  if(libsWarm) return; libsWarm = true;
+  setTimeout(()=>{ loadLib("xlsx").catch(()=>{}); loadLib("html2canvas").catch(()=>{}); }, 4000);
+}
+
+/* ---------- একজনের পূর্ণ তথ্যের পপআপ ---------- */
+const FIELD_LABEL = Object.fromEntries(FIELDS);
+const DATE_KEYS = new Set(["joining_date","date_of_birth"]);
+/* ---------- ডুপ্লিকেট চেক ---------- */
+// এই কলামগুলোতে একই তথ্য আগে থাকলে জমা নেওয়া হবে না।
+// বাদ: DD Code, DD Name, RG Name, RG Code, Designation, Joining Date, Date of Birth, Blood Group, Education, Relation, Status, জমা দিয়েছেন,
+//      এবং Name, Father/Mother Name, দুই ঠিকানা, Emergency Name (একই পরিবার বা এলাকায় মিলে যেতে পারে)
+const DUP_FIELDS = ["rso_code","pool_phone","own_retail_code","nid","rid","scanner_sl","bank_account","emergency_phone"];
+const DUP_DIGITS = new Set(["pool_phone","emergency_phone","nid","rid","bank_account"]);
+function dupNorm(k, v){
+  v = bn2en(String(v??"")).trim().toLowerCase();
+  return DUP_DIGITS.has(k) ? v.replace(/[^0-9a-z]/g,"") : v.replace(/\s+/g," ");
+}
+// অন্য কোনো রেকর্ডে (বাতিল হওয়াগুলো বাদে) একই মান আছে কিনা
+function findDupLocal(k, v, excludeId){
+  const n = dupNorm(k, v); if(!n) return null;
+  return records.find(r => r.id!==excludeId && approvalOf(r)!=="rejected" && dupNorm(k, r[k])===n) || null;
+}
+function dupMsgText(k, other){
+  const label = (FIELDS.find(f=>f[0]===k)||[k,k])[1];
+  const who = other ? " ("+[other.name, other.dd_code].filter(Boolean).join(", ")+")" : "";
+  return "ডুপ্লিকেট! এই "+label+" আগেই লেখা আছে"+who;
+}
+/* ---------- Status: New যোগদানের পরের মাসের ১ তারিখে নিজে থেকে Existing ---------- */
+function monthIdx(x){
+  if(!x) return null;
+  const v = fmtDate(x), m = /^(\d{4})-(\d{2})/.exec(v);
+  if(m) return parseInt(m[1],10)*12 + parseInt(m[2],10) - 1;
+  const d = new Date(String(x)); return isNaN(d) ? null : d.getFullYear()*12 + d.getMonth();
+}
+function autoStatus(r){
+  if(!r || String(r.status||"").trim() !== "New") return r;
+  const ref = monthIdx(r.joining_date) ?? monthIdx(r.submitted_at);   // যোগদানের মাস (না থাকলে জমা দেওয়ার মাস)
+  if(ref === null) return r;
+  const now = new Date();
+  if(now.getFullYear()*12 + now.getMonth() > ref) return Object.assign({}, r, {status:"Existing"});
+  return r;
+}
+// তারিখের সাথে জুড়ে থাকা সময় (যেমন T00:00:00.000Z) বাদ দিয়ে শুধু তারিখ রাখে
+function fmtDate(x){
+  if(!x) return "";
+  const v = String(x).trim();
+  if(/^\d{4}-\d{2}-\d{2}T/.test(v)){
+    const d = new Date(v);
+    if(!isNaN(d)) return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  }
+  return v.replace(/[ T]\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\s*(Z|[AP]M)?$/i, "").trim();
+}
+const dispVal = (r,k) => DATE_KEYS.has(k) ? fmtDate(r[k]) : r[k];
+
+const APPROVAL_TEXT = {approved:"অনুমোদিত", pending_add:"DGO-র অনুমোদনের অপেক্ষায়", pending_delete:"বাদ দেওয়ার অনুরোধ চলছে", rejected:"DGO বাতিল করেছেন"};
+let detailId = null, detailFocus = null;
+const fmtTime = x => { if(!x) return "—"; const t = new Date(x); return isNaN(t) ? esc(x) : esc(t.toLocaleString("bn-BD")); };
+
+// স্ক্রিন ছোট হলে পপআপ নিজে ছোট হয়ে পুরোটা এক পর্দায় আসে (স্ক্রল লাগে না)
+function fitDetail(){
+  const m = $("#detailModal"), box = $("#detailModal .modal-box");
+  if(!m || m.hidden) return;
+  box.style.transform = ""; m.classList.remove("fit");
+  if(window.innerWidth < 700) return;                       // ফোনে স্ক্রল চলবে
+  const sc = Math.min(1, (window.innerHeight - 16) / box.offsetHeight);
+  if(sc < 0.72) return;                                     // খুব ছোট হলে লেখা পড়া যায় না, তাই স্ক্রল
+  m.classList.add("fit");
+  if(sc < 1) box.style.transform = "scale(" + sc.toFixed(3) + ")";
+}
+window.addEventListener("resize", fitDetail);
+
+function showDetail(id){
+  const r = records.find(x=>x.id===id); if(!r) return;
+  detailId = id; detailFocus = document.activeElement;
+  $("#detailTitle").textContent = r.name || "—";
+  $("#detailSub").textContent = ident(r) + (r.dd_code ? " · DD " + r.dd_code : "");
+  const wide = new Set(["present_address","permanent_address"]);
+  const item = (label, html, cls) => '<div'+(cls?' class="'+cls+'"':'')+'><dt>'+esc(label)+'</dt><dd>'+html+'</dd></div>';
+  const sec = (title, inner) => '<section><h3 class="dgroup">'+esc(title)+'</h3><dl class="dl">'+inner+'</dl></section>';
+  const fields = keys => keys.map(k=>{
+    const v = dispVal(r,k);
+    return item(FIELD_LABEL[k], v ? esc(v) : "—", wide.has(k) ? "full" : "");
+  }).join("");
+  const a = approvalOf(r);
+  const statusHtml = r.status ? '<span class="tag '+esc(r.status)+'">'+esc(r.status)+'</span>' : "—";
+  const left = sec("ডিস্ট্রিবিউটর", fields(["dd_code","dd_name","rso_code","pool_phone","own_retail_code"]))
+    + sec("কর্মীর তথ্য", fields(["nid","rid","name","rg_name","rg_code","scanner_sl","bank_account","designation","joining_date","date_of_birth"]));
+  const right = sec("ব্যক্তিগত তথ্য", fields(["blood_group","education","father_name","mother_name","present_address","permanent_address"]))
+    + sec("জরুরি যোগাযোগ", fields(["emergency_name","emergency_phone","emergency_relation"]))
+    + sec("অবস্থা ও জমার তথ্য",
+        item("Status", statusHtml)
+      + item("অনুমোদন", esc(APPROVAL_TEXT[a] || a))
+      + item("জমা দিয়েছেন", esc(((r.submitted_role||"")+" "+(r.submitted_by||"")).trim() || "—"))
+      + item("জমাদাতার ফোন", esc(r.submitted_phone || "—"))
+      + item("জমার সময়", fmtTime(r.submitted_at))
+      + (r.edited_by ? item("সর্বশেষ এডিট", esc(r.edited_by)+", "+fmtTime(r.edited_at)) : ""));
+  $("#detailBody").innerHTML = '<div class="dcols"><div>'+left+'</div><div>'+right+'</div></div>';
+  $("#detailFoot").innerHTML = '<button class="btn btn-ghost" type="button" data-shot>📷 স্ক্রিনশট</button>'
+    + (a==="approved" ? '<button class="btn btn-primary" type="button" data-edit-detail>এডিট করুন</button>' : '')
+    + '<button class="btn btn-ghost" type="button" data-close>বন্ধ করুন</button>';
+  $("#detailModal").hidden = false; $("#detailModal").scrollTop = 0;
+  document.body.style.overflow = "hidden";
+  fitDetail();
+  const x = $("#detailModal .modal-x"); if(x) x.focus();
+}
+function closeDetail(){
+  const m = $("#detailModal"); if(!m || m.hidden) return;
+  m.hidden = true; m.classList.remove("fit"); $("#detailModal .modal-box").style.transform = "";
+  detailId = null; document.body.style.overflow = "";
+  if(detailFocus && detailFocus.focus && document.contains(detailFocus)) detailFocus.focus();
+}
+async function detailShot(){
+  const r = records.find(x=>x.id===detailId); if(!r) return;
+  const box = $("#detailModal .modal-box"), prev = box.style.transform;
+  box.style.transform = "none";                             // স্ক্রিনশটে পুরো মাপে আসুক
+  try{ await takeScreenshot($("#detailShot"), "ryze_" + String(r.rid || r.nid || "info").replace(/\W+/g,"_") + ".png"); }
+  finally{ box.style.transform = prev; }
+}
+$("#detailModal").addEventListener("click", e=>{
+  if(e.target === $("#detailModal") || e.target.closest("[data-close]")){ closeDetail(); return; }
+  if(e.target.closest("[data-shot]")){ detailShot(); return; }
+  if(e.target.closest("[data-edit-detail]")){ const id = detailId; closeDetail(); if(id) startEdit(id); }
+});
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeDetail(); });
+
+/* ---------- Start ---------- */
+// লগইন পেজ খোলার সময়ই সার্ভারকে জাগিয়ে রাখো, যাতে লগইন দ্রুত হয়
+if(CONFIG.API_URL && !(session && session.dgo_id)){
+  try{ fetch(CONFIG.API_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"ping"})}).catch(()=>{}); }catch(e){}
+}
+if(session && session.dgo_id) enterApp(); else sessionStorage.removeItem(CONFIG.SESSION_KEY);
+</script>
+</body>
+</html>
