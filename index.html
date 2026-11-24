@@ -312,7 +312,7 @@ h3.dgroup{font-size:.8rem;margin:10px 0 6px;padding-bottom:3px;border-bottom:1px
             <div class="field"><label for="dd_name">DD Name</label><input id="dd_name" name="dd_name" required><span class="err"></span></div>
             <div class="field"><label for="rso_code">RSO Code / SUP Code</label><input id="rso_code" name="rso_code" required><span class="err"></span></div>
             <div class="field"><label for="pool_phone">Pool Phone</label><input id="pool_phone" name="pool_phone" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX" required><span class="err"></span></div>
-            <div class="field"><label for="own_retail_code">Own Retail Code</label><input id="own_retail_code" name="own_retail_code" required><span class="err"></span></div>
+            <div class="field" id="ownRetailField"><label for="own_retail_code">Own Retail Code</label><input id="own_retail_code" name="own_retail_code" required><span class="err"></span></div>
           </div>
         </fieldset>
 
@@ -562,6 +562,20 @@ function enterApp(){
 }
 
 /* ---------- Live allocation (Google Sheet → Website) ---------- */
+/* ---------- Rangers / General অ্যালোকেশন ---------- */
+const isGeneral = d => /general|^\s*rg\s*$/i.test(String(d||""));
+// হাউস + ডেজিগনেশন অনুযায়ী কতজন বাকি; ভাগ করা হাউসে ক্যাটাগরির সীমা ধরা হয়
+function houseLeft(h, desig){
+  if(!h) return null;
+  if(h.split){
+    const rg = isGeneral(desig);
+    const alloc = rg ? (h.rg_alloc||0) : (h.rr_alloc||0), cur = rg ? (h.rg_current||0) : (h.rr_current||0);
+    return {left: Math.max(0, alloc-cur), label: rg ? "RYZE General" : "RYZE Rangers"};
+  }
+  if(h.allocation > 0) return {left: Math.max(0, h.allocation-(h.current||0)), label: ""};
+  return null;
+}
+const catFullMsg = m => "এই House-এ " + (String(m).endsWith("RG") ? "RYZE General" : "RYZE Rangers") + " এর অ্যালোকেশন পূর্ণ। যোগ করা যায়নি।";
 function allocHintFor(houses){
   const el = $("#allocHint"), inp = $("#dd_code");
   if(!el || !inp) return;
@@ -570,20 +584,32 @@ function allocHintFor(houses){
   const h = (houses||[]).find(x => String(x.house_code||x.dd_code||"").trim() === code);
   if(!h){ el.textContent = ""; return; }
   const left = Math.max(0, (h.allocation||0) - (h.current||0));
-  el.textContent = "অ্যালোকেশন " + (h.allocation||0) + " · বর্তমান " + (h.current||0) + " · বাকি " + left + " জন";
-  el.style.color = left===0 ? "#c0392b" : "var(--muted)";
+  let t = "অ্যালোকেশন " + (h.allocation||0) + " · বর্তমান " + (h.current||0) + " · বাকি " + left + " জন";
+  if(h.split) t += "  |  Rangers " + (h.rr_current||0) + "/" + (h.rr_alloc||0) + " · General " + (h.rg_current||0) + "/" + (h.rg_alloc||0);
+  el.textContent = t;
+  const dsel = document.getElementById("designation");
+  const hl = h.split && dsel && dsel.value ? houseLeft(h, dsel.value) : null;
+  el.style.color = (hl ? hl.left===0 : left===0) ? "#c0392b" : "var(--muted)";
 }
 // জমা দেওয়ার পর সার্ভারকে আবার না ডেকে ক্যাশের সংখ্যা নিজেই বাড়াও/কমাও
-function bumpHouse(code, d){
+function bumpHouse(code, d, desig){
   const hs = getCached("houses"); if(!hs) return;
   const h = hs.find(x=>String(x.house_code||x.dd_code||"").trim()===String(code||"").trim());
-  if(h){ h.current = Math.max(0, (h.current||0) + d); h.remaining = Math.max(0, (h.allocation||0) - h.current); }
+  if(h){
+    h.current = Math.max(0, (h.current||0) + d);
+    if(h.split){
+      if(isGeneral(desig)){ h.rg_current = Math.max(0,(h.rg_current||0)+d); h.rg_remaining = Math.max(0,(h.rg_alloc||0)-h.rg_current); }
+      else { h.rr_current = Math.max(0,(h.rr_current||0)+d); h.rr_remaining = Math.max(0,(h.rr_alloc||0)-h.rr_current); }
+      h.remaining = (h.rr_remaining||0) + (h.rg_remaining||0);
+    } else h.remaining = Math.max(0, (h.allocation||0) - h.current);
+  }
   allocHintFor(hs);
 }
 async function refreshAllocHint(force){
   try{ allocHintFor(await fetchCached("houses", fetchHouses, {force})); }catch(e){}
 }
 if($("#dd_code")) $("#dd_code").addEventListener("input", ()=>allocHintFor(getCached("houses")));
+if($("#designation")) $("#designation").addEventListener("change", ()=>allocHintFor(getCached("houses")));
 // প্রতি ২০ সেকেন্ডে শিট থেকে নতুন অ্যালোকেশন আনো (ট্যাব খোলা থাকলে)
 setInterval(()=>{
   if(!session || document.hidden) return;
@@ -797,11 +823,17 @@ form.elements.present_address.addEventListener("input",()=>{ if($("#sameAddr").c
 // RYZE General ও Online RYZE General এ Scanner SL লাগে না। RYZE Rangers এ আবশ্যক।
 const NO_SCANNER = new Set(["RYZE General","Online RYZE General"]);
 function applyDesignation(){
-  const d = form.elements.designation.value, sc = form.elements.scanner_sl, wrap = $("#scannerField");
-  const hide = NO_SCANNER.has(d);
-  wrap.hidden = hide;
-  if(hide){ sc.value = ""; sc.required = false; clearErr(wrap); }
+  const d = form.elements.designation.value, hide = NO_SCANNER.has(d);
+  // Scanner SL: General হলে লুকানো; Rangers হলে আবশ্যক
+  const sc = form.elements.scanner_sl, scWrap = $("#scannerField");
+  scWrap.hidden = hide;
+  if(hide){ sc.value = ""; sc.required = false; clearErr(scWrap); }
   else sc.required = (d === "RYZE Rangers");
+  // Own Retail Code: General হলে লুকানো; বাকিদের জন্য আবশ্যক
+  const orc = form.elements.own_retail_code, orcWrap = $("#ownRetailField");
+  orcWrap.hidden = hide;
+  if(hide){ orc.value = ""; orc.required = false; clearErr(orcWrap); }
+  else orc.required = true;
 }
 function ensureDesignationOption(v){
   const sel = form.elements.designation;
@@ -867,10 +899,11 @@ form.addEventListener("submit", async e=>{
   if(rec.dd_code){
     const hs = getCached("houses") || [];
     const h = hs.find(x=>String(x.house_code||x.dd_code||"").trim()===rec.dd_code);
-    if(h && h.allocation > 0){
-      const left = Math.max(0, h.allocation - (h.current||0));
-      if(left <= 0){ toast("এই House/DD Code ("+rec.dd_code+") এর অ্যালোকেশন পূর্ণ। নতুন কর্মী যোগ করা যাবে না।", true); return; }
-      if(left <= 3 && !confirm("এই House-এ মাত্র "+left+" জন বাকি আছে। তবুও যোগ করবেন?")) return;
+    const hl = houseLeft(h, rec.designation);
+    if(hl){
+      const who = hl.label ? hl.label+" এর " : "";
+      if(hl.left <= 0){ toast("এই House/DD Code ("+rec.dd_code+") এ "+who+"অ্যালোকেশন পূর্ণ। নতুন কর্মী যোগ করা যাবে না।", true); return; }
+      if(hl.left <= 3 && !confirm("এই House-এ "+who+"মাত্র "+hl.left+" জন বাকি আছে। তবুও যোগ করবেন?")) return;
     }
   }
 
@@ -883,10 +916,11 @@ form.addEventListener("submit", async e=>{
   const btn = $("#submitBtn"); btn.disabled = true; btn.textContent = "জমা হচ্ছে…";
   try{
     await apiPost({action:"add", record:rec});
-    records.push(rec); bumpHouse(rec.dd_code, 1); invalidate("houses"); updateCount();
+    records.push(rec); bumpHouse(rec.dd_code, 1, rec.designation); invalidate("houses"); updateCount();
     form.reset(); toast(session.role==="DGO" ? "তথ্য জমা হয়েছে" : "DGO-র অনুমোদনের জন্য পাঠানো হয়েছে");
   }catch(err){
-    if(err.message === "house_full") toast("এই House-এর অ্যালোকেশন পূর্ণ। যোগ করা যায়নি।", true);
+    if(/^category_full:/.test(err.message)) toast(catFullMsg(err.message), true);
+    else if(err.message === "house_full") toast("এই House-এর অ্যালোকেশন পূর্ণ। যোগ করা যায়নি।", true);
     else if(!handleDupError(err)) toast("জমা হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।", true);
   }
   btn.disabled = false; btn.textContent = session.role==="DGO" ? "জমা দিন" : "অনুমোদনের জন্য পাঠান";
@@ -997,7 +1031,8 @@ function precheckApprove(r, kind){
   if(kind==="add"){
     const hs = getCached("houses") || [], code = String(r.dd_code||"").trim();
     const h = hs.find(x=>String(x.house_code||x.dd_code||"").trim()===code);
-    if(h && h.allocation > 0 && (h.current||0) >= h.allocation) return "এই House ("+code+") এর অ্যালোকেশন পূর্ণ";
+    const hl = houseLeft(h, r.designation);
+    if(hl && hl.left <= 0) return "এই House ("+code+") এ "+(hl.label?hl.label+" এর ":"")+"অ্যালোকেশন পূর্ণ";
   }
   return null;
 }
@@ -1142,61 +1177,84 @@ function drawDashboard(houses){
   const wrap = $("#dashTableWrap"), pieWrap = $("#dashPieWrap"), txt = $("#dashText");
   if(!wrap) return;
   if(pieWrap) pieWrap.innerHTML = "";
-    if(!houses.length){
-      wrap.innerHTML = '<div class="empty">এখনো কোনো House Code যোগ করা হয়নি। Google Sheet-এর <b>Houses</b> শিটে <b>house_code</b> ও <b>allocation</b> যোগ করুন।</div>';
-      return;
+  if(!houses.length){
+    wrap.innerHTML = '<div class="empty">এখনো কোনো House Code যোগ করা হয়নি। Google Sheet-এর <b>Houses</b> শিটে <b>house_code</b> ও <b>allocation</b> যোগ করুন।</div>';
+    return;
+  }
+
+  const totalAlloc = houses.reduce((s,h)=>s + (h.allocation||0), 0);
+  const totalCurrent = houses.reduce((s,h)=>s + (h.current||0), 0);
+  const totalRemain = houses.reduce((s,h)=>s + (h.remaining||0), 0);
+
+  // Rangers / General আলাদা যোগফল (ভাগ না করা হাউসের সবাই Rangers ধরা হয়)
+  const agg = {rr:{a:0,c:0}, rg:{a:0,c:0}}; let anySplit = false;
+  houses.forEach(h=>{
+    if(h.split){ anySplit = true; agg.rr.a += h.rr_alloc||0; agg.rr.c += h.rr_current||0; agg.rg.a += h.rg_alloc||0; agg.rg.c += h.rg_current||0; }
+    else { agg.rr.a += h.allocation||0; agg.rr.c += h.current||0; }
+  });
+
+  txt.textContent = houses.length + " টি হাউস · মোট অ্যালোকেশন " + totalAlloc + " · বর্তমান " + totalCurrent + " · বাকি " + totalRemain
+    + (anySplit ? " · Rangers " + agg.rr.c + "/" + agg.rr.a + " · General " + agg.rg.c + "/" + agg.rg.a : "");
+
+  if(pieWrap){
+    const colors = ["#12E3AB","#CDBBF5","#F28080","#D966A5","#9A82E3","#F1E5C4","#7FB4D8","#E49AC6"];
+    const overallSeg = [
+      {value: totalCurrent, color: "#12E3AB", label: "বর্তমান কর্মী"},
+      {value: totalRemain, color: "#EFE6CF", label: "বাকি স্লট"}
+    ];
+    let pieHtml = '<div style="text-align:center"><div style="font-weight:700;margin-bottom:8px">মোট পূরণ</div>'
+      + makePieSVG(overallSeg, 160)
+      + '<div style="margin-top:8px;font-size:.9rem"><span style="color:#12E3AB">●</span> বর্তমান '+totalCurrent+' &nbsp; <span style="color:#bfae82">●</span> বাকি '+totalRemain+'</div></div>';
+
+    if(anySplit){
+      const catPie = (title, c, a, color) => '<div style="text-align:center"><div style="font-weight:700;margin-bottom:8px">'+title+'</div>'
+        + makePieSVG([{value:c,color:color,label:"বর্তমান"},{value:Math.max(0,a-c),color:"#EFE6CF",label:"বাকি"}], 160)
+        + '<div style="margin-top:8px;font-size:.9rem"><span style="color:'+color+'">●</span> বর্তমান '+c+' &nbsp; <span style="color:#bfae82">●</span> বাকি '+Math.max(0,a-c)+'</div>'
+        + '<div style="font-size:.8rem;color:var(--muted)">অ্যালোকেশন '+a+'</div></div>';
+      pieHtml += catPie("RYZE Rangers", agg.rr.c, agg.rr.a, "#9A82E3") + catPie("RYZE General", agg.rg.c, agg.rg.a, "#F5A623");
     }
 
-    const totalAlloc = houses.reduce((s,h)=>s + (h.allocation||0), 0);
-    const totalCurrent = houses.reduce((s,h)=>s + (h.current||0), 0);
-    const totalRemain = houses.reduce((s,h)=>s + (h.remaining||0), 0);
-
-    txt.textContent = houses.length + " টি হাউস · মোট অ্যালোকেশন " + totalAlloc + " · বর্তমান " + totalCurrent + " · বাকি " + totalRemain;
-
-    // Pie chart: Current vs Remaining (overall) + per-house small pies optional
-    if(pieWrap){
-      const colors = ["#12E3AB","#CDBBF5","#F28080","#D966A5","#9A82E3","#F1E5C4","#7FB4D8","#E49AC6"];
-      // Overall fill pie
-      const overallSeg = [
-        {value: totalCurrent, color: "#12E3AB", label: "বর্তমান কর্মী"},
-        {value: totalRemain, color: "#EFE6CF", label: "বাকি স্লট"}
-      ];
-      let pieHtml = '<div style="text-align:center"><div style="font-weight:700;margin-bottom:8px">মোট পূরণ</div>'
-        + makePieSVG(overallSeg, 160)
-        + '<div style="margin-top:8px;font-size:.9rem"><span style="color:#12E3AB">●</span> বর্তমান '+totalCurrent+' &nbsp; <span style="color:#bfae82">●</span> বাকি '+totalRemain+'</div></div>';
-
-      // Per house small pies (max 8)
-      const top = houses.slice(0, 8);
-      pieHtml += top.map((h,i) => {
-        const code = h.house_code || h.dd_code || "";
-        const seg = [
-          {value: h.current||0, color: colors[i % colors.length], label: "Current"},
-          {value: Math.max(0, (h.allocation||0)-(h.current||0)), color: "#EFE6CF", label: "Remaining"}
-        ];
-        return '<div style="text-align:center"><div style="font-weight:600;font-size:.85rem;margin-bottom:4px">'+esc(code)+'</div>'
-          + makePieSVG(seg, 100)
-          + '<div style="font-size:.8rem;color:var(--muted)">'+(h.current||0)+'/'+(h.allocation||0)+'</div></div>';
-      }).join("");
-
-      pieWrap.innerHTML = pieHtml;
-    }
-
-    const head = "<th>House Code</th><th>Total Allocation</th><th>Current</th><th>Remaining</th><th>Fill %</th><th>Progress</th>";
-    const body = houses.map(h=>{
+    const top = houses.slice(0, 8);
+    pieHtml += top.map((h,i) => {
       const code = h.house_code || h.dd_code || "";
-      const fillPct = h.allocation > 0 ? Math.round((h.current / h.allocation) * 100) : 0;
-      const emptyPct = h.allocation > 0 ? Math.round((h.remaining / h.allocation) * 100) : 0;
-      let barColor = "#12E3AB";
-      if(fillPct >= 100) barColor = "#F28080";
-      else if(fillPct >= 70) barColor = "#D966A5";
-      const bar = '<div style="background:#EFE6CF;border-radius:8px;height:18px;width:140px;overflow:hidden;position:relative">'
-        + '<div style="background:'+barColor+';height:100%;width:'+Math.min(100,fillPct)+'%;border-radius:8px"></div>'
-        + '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">'+fillPct+'%</span></div>';
-      return "<tr><td><strong>"+esc(code)+"</strong></td><td>"+esc(h.allocation)+"</td><td>"+esc(h.current)+"</td>"
-        + "<td><strong>"+esc(h.remaining)+"</strong> <span style='color:var(--muted);font-size:.8rem'>("+emptyPct+"%)</span></td>"
-        + "<td>"+fillPct+"%</td><td>"+bar+"</td></tr>";
+      const seg = [
+        {value: h.current||0, color: colors[i % colors.length], label: "Current"},
+        {value: Math.max(0, (h.allocation||0)-(h.current||0)), color: "#EFE6CF", label: "Remaining"}
+      ];
+      return '<div style="text-align:center"><div style="font-weight:600;font-size:.85rem;margin-bottom:4px">'+esc(code)+'</div>'
+        + makePieSVG(seg, 100)
+        + '<div style="font-size:.8rem;color:var(--muted)">'+(h.current||0)+'/'+(h.allocation||0)+'</div>'
+        + (h.split ? '<div style="font-size:.72rem;color:var(--muted)">RR '+(h.rr_current||0)+'/'+(h.rr_alloc||0)+' · RG '+(h.rg_current||0)+'/'+(h.rg_alloc||0)+'</div>' : '')
+        + '</div>';
     }).join("");
-    wrap.innerHTML = '<table style="min-width:700px"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';
+
+    pieWrap.innerHTML = pieHtml;
+  }
+
+  const catCell = (cur, alloc, rem) => '<span'+(alloc>0&&rem<=0?' style="color:#c0392b;font-weight:700"':'')+'>'+cur+'/'+alloc+'</span> <span style="color:var(--muted);font-size:.8rem">(বাকি '+rem+')</span>';
+  const head = "<th>House Code</th>" + (anySplit ? "<th>RYZE Rangers</th><th>RYZE General</th>" : "")
+    + "<th>Total Allocation</th><th>Current</th><th>Remaining</th><th>Fill %</th><th>Progress</th>";
+  const body = houses.map(h=>{
+    const code = h.house_code || h.dd_code || "";
+    const fillPct = h.allocation > 0 ? Math.round((h.current / h.allocation) * 100) : 0;
+    const emptyPct = h.allocation > 0 ? Math.round((h.remaining / h.allocation) * 100) : 0;
+    let barColor = "#12E3AB";
+    if(fillPct >= 100) barColor = "#F28080";
+    else if(fillPct >= 70) barColor = "#D966A5";
+    const bar = '<div style="background:#EFE6CF;border-radius:8px;height:18px;width:140px;overflow:hidden;position:relative">'
+      + '<div style="background:'+barColor+';height:100%;width:'+Math.min(100,fillPct)+'%;border-radius:8px"></div>'
+      + '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">'+fillPct+'%</span></div>';
+    let cats = "";
+    if(anySplit){
+      cats = h.split
+        ? "<td>"+catCell(h.rr_current||0, h.rr_alloc||0, h.rr_remaining||0)+"</td><td>"+catCell(h.rg_current||0, h.rg_alloc||0, h.rg_remaining||0)+"</td>"
+        : "<td>"+catCell(h.current||0, h.allocation||0, h.remaining||0)+"</td><td style='color:var(--muted)'>—</td>";
+    }
+    return "<tr><td><strong>"+esc(code)+"</strong></td>"+cats+"<td>"+esc(h.allocation)+"</td><td>"+esc(h.current)+"</td>"
+      + "<td><strong>"+esc(h.remaining)+"</strong> <span style='color:var(--muted);font-size:.8rem'>("+emptyPct+"%)</span></td>"
+      + "<td>"+fillPct+"%</td><td>"+bar+"</td></tr>";
+  }).join("");
+  wrap.innerHTML = '<table style="min-width:'+(anySplit?900:700)+'px"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';
 }
 async function renderDashboard(force){
   const wrap = $("#dashTableWrap"), pieWrap = $("#dashPieWrap"), txt = $("#dashText");
