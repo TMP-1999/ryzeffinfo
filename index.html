@@ -393,12 +393,12 @@ h3.dgroup{font-size:.8rem;margin:10px 0 6px;padding-bottom:3px;border-bottom:1px
           <select id="ddFilter"><option value="">সব House / DD Code</option></select>
         </div>
         <div class="field" style="min-width:150px">
-          <label for="catFilter">ক্যাটাগরি (RR / RG) ফিল্টার</label>
+          <label for="catFilter">ক্যাটাগরি ফিল্টার</label>
           <select id="catFilter"><option value="">সব ক্যাটাগরি</option></select>
         </div>
         <div class="field" style="min-width:170px">
-          <label for="supFilter">সুপারভাইজার নেম ফিল্টার</label>
-          <select id="supFilter"><option value="">সব সুপারভাইজার</option></select>
+          <label for="supFilter">RG নেম ফিল্টার</label>
+          <select id="supFilter"><option value="">সব RG</option></select>
         </div>
         <button class="btn btn-ghost" id="csvBtn" type="button">CSV ডাউনলোড</button>
         <button class="btn btn-ghost" id="xlsxBtn" type="button">Excel ডাউনলোড</button>
@@ -647,6 +647,7 @@ function setupDdField(){
 let curTab = "form";
 function showTab(t){
   curTab = t;
+  if(t==="list") fetchCached("houses", fetchHouses).then(()=>populateDdFilter()).catch(()=>{});   // নতুন House Code এলে ফিল্টারে আসবে
   if(t==="form") refreshAllocHint(false);          // ক্যাশ ১৫ সেকেন্ডের বেশি পুরনো হলেই নতুন আনবে
   if(t==="dash") renderDashboard(false);
   $("#formPane").hidden = t!=="form";
@@ -949,7 +950,17 @@ function rowAction(r){
     : '<button class="linkbtn" data-reqdel="'+esc(r.id)+'" type="button">বাদ দেওয়ার অনুরোধ</button>');
 }
 /* ---------- Category / Supervisor filter helpers ---------- */
-const catOf = r => String(r.category || r.designation || "").trim();
+const CATS = ["RYZE General","RYZE Rangers","Online RYZE General"];
+// পুরনো/ভিন্নভাবে লেখা Designation (RR, Raze Rangers, RG…) তিনটা ক্যাটাগরির একটাতে মেলানো হয়
+function catOf(r){
+  const d = String(r.category || r.designation || "").toLowerCase();
+  if(/online/.test(d) && /general/.test(d)) return "Online RYZE General";
+  if(/general/.test(d) || /^\s*rg\s*$/.test(d)) return "RYZE General";
+  return "RYZE Rangers";
+}
+// RG নেম: বড়-ছোট হাতের অক্ষর ও বাড়তি স্পেস উপেক্ষা করে একই নাম এক ধরা হয়
+const rgKey = r => String(r.rg_name||"").toLowerCase().replace(/\s+/g," ").trim();
+const rgLabel = r => String(r.rg_name||"").replace(/\s+/g," ").trim();
 function supNameOf(r){
   const code = String(r.submitted_by||"").trim();
   if(r.submitted_role==="DGO") return "DGO " + code;
@@ -961,24 +972,40 @@ function supNameOf(r){
 function applyExtraFilters(rows){
   const cf = ($("#catFilter")&&$("#catFilter").value)||"", sf = ($("#supFilter")&&$("#supFilter").value)||"";
   if(cf) rows = rows.filter(r=>catOf(r)===cf);
-  if(sf) rows = rows.filter(r=>supNameOf(r)===sf);
+  if(sf) rows = rows.filter(r=>rgKey(r)===sf);
   return rows;
 }
 function populateExtraFilters(){
-  const base = visible();
-  [["#catFilter",catOf,"সব ক্যাটাগরি"],["#supFilter",supNameOf,"সব সুপারভাইজার"]].forEach(([id,fn,all])=>{
-    const sel=$(id); if(!sel) return;
-    const cur=sel.value;
-    const vals=[...new Set(base.map(fn).filter(v=>v&&v!=="—"))].sort();
-    sel.innerHTML='<option value="">'+all+'</option>'+vals.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");
-    if(cur&&vals.includes(cur)) sel.value=cur;
-  });
+  // বাছাই করা House থাকলে সেই House-এর রেকর্ড ধরে ক্যাটাগরি ও RG-র তালিকা ও সংখ্যা বানানো হয়
+  const dd = ($("#ddFilter")&&$("#ddFilter").value)||"";
+  const base = visible().filter(r=>!dd || String(r.dd_code||"").trim()===dd);
+
+  const catSel = $("#catFilter");
+  if(catSel){
+    const cur = catSel.value, cnt = {};
+    base.forEach(r=>{ const c = catOf(r); cnt[c] = (cnt[c]||0) + 1; });
+    catSel.innerHTML = '<option value="">সব ক্যাটাগরি</option>' + CATS.map(c=>'<option value="'+esc(c)+'">'+esc(c)+' ('+(cnt[c]||0)+')</option>').join("");
+    if(cur && CATS.includes(cur)) catSel.value = cur;
+  }
+
+  const rgSel = $("#supFilter");
+  if(rgSel){
+    const cur = rgSel.value, m = new Map();
+    base.forEach(r=>{
+      const k = rgKey(r); if(!k) return;
+      const e = m.get(k) || {label: rgLabel(r), n: 0}; e.n++; m.set(k, e);
+    });
+    const list = [...m.entries()].sort((a,b)=>a[1].label.localeCompare(b[1].label));
+    rgSel.innerHTML = '<option value="">সব RG</option>' + list.map(([k,e])=>'<option value="'+esc(k)+'">'+esc(e.label)+' ('+e.n+')</option>').join("");
+    if(cur && m.has(cur)) rgSel.value = cur;
+  }
 }
 function populateDdFilter(){
   const sel = $("#ddFilter");
   if(!sel) return;
   const current = sel.value;
-  const codes = [...new Set(visible().map(r => String(r.dd_code||"").trim()).filter(Boolean))].sort();
+  const fromHouses = (getCached("houses")||[]).map(h => String(h.house_code||h.dd_code||"").trim());
+  const codes = [...new Set([...visible().map(r => String(r.dd_code||"").trim()), ...fromHouses].filter(Boolean))].sort();
   sel.innerHTML = '<option value="">সব House / DD Code</option>' + codes.map(c => '<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");
   if(current && codes.includes(current)) sel.value = current;
 }
