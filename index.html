@@ -147,16 +147,18 @@ tr:last-child td{border-bottom:0}
 .btn.sm{min-height:42px;padding:8px 16px}
 .tag.add{background:#CFF8EA;color:#05604A}
 .tag.del{background:#F9D2D2;color:#8A2222}
-.dash-big,.dash-houses{display:flex;flex-wrap:wrap;justify-content:center;width:100%}
-.dash-big{gap:16px}
-.dash-houses{gap:14px;margin-top:16px}
-.dash-big .dcard{flex:0 1 calc(33.333% - 11px);min-width:210px}
-.dash-houses .dcard{flex:0 1 calc(33.333% - 10px);min-width:170px}
-.dcard{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px 10px;text-align:center}
-.dcard .dt{font-weight:700;margin-bottom:8px}
-.dcard .dsm{font-size:.8rem;color:var(--muted)}
+.dash-big{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.dash-houses{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.dcard{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-width:0}
+.dcard svg{flex:none}
+.dcard .dtx{min-width:0;line-height:1.35}
+.dcard .dt{font-weight:700;font-size:.95rem;margin-bottom:2px}
+.dcard .dn{font-size:.85rem}
+.dcard .dsm{font-size:.78rem;color:var(--muted)}
 .dcard .dxs{font-size:.72rem;color:var(--muted)}
-@media(max-width:640px){.dash-big .dcard{flex-basis:100%}.dash-houses .dcard{flex-basis:calc(50% - 8px);min-width:0}}
+.dcard .dbig{font-size:1.05rem;font-weight:700}
+@media(max-width:900px){.dash-houses{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.dash-big{grid-template-columns:1fr;gap:8px}.dash-big .dcard{padding:8px 12px}.dash-big .dcard svg{width:64px;height:64px}.dash-houses{grid-template-columns:repeat(2,1fr);gap:8px}.dash-houses .dcard{gap:8px;padding:8px 10px}.dash-houses .dcard svg{width:46px;height:46px}}
 .tag.edit{background:#DCE8FB;color:#1F3F7A}
 .diff{margin-top:8px;font-size:.88rem;line-height:1.5}
 .diff b{font-weight:700}
@@ -1213,10 +1215,11 @@ function drawDashboard(houses){
       {value: totalRemain, color: "#EFE6CF", label: "বাকি স্লট"}
     ];
     // ওপরে বড় তিনটা (মোট, Rangers, General); নিচে প্রতিটা হাউসের ছোট পাই, সারি ধরে সাজানো
-    const bigCard = (title, c, a, rem, color, extra) => '<div class="dcard"><div class="dt">'+title+'</div>'
-      + makePieSVG([{value:c,color:color,label:"বর্তমান"},{value:rem,color:"#EFE6CF",label:"বাকি"}], 170)
-      + '<div style="margin-top:8px;font-size:.9rem"><span style="color:'+color+'">●</span> বর্তমান '+c+' &nbsp; <span style="color:#bfae82">●</span> বাকি '+rem+'</div>'
-      + (extra ? '<div class="dsm">'+extra+'</div>' : '') + '</div>';
+    const bigCard = (title, c, a, rem, color, extra) => '<div class="dcard">'
+      + makePieSVG([{value:c,color:color,label:"বর্তমান"},{value:rem,color:"#EFE6CF",label:"বাকি"}], 92)
+      + '<div class="dtx"><div class="dt">'+title+'</div>'
+      + '<div class="dn"><span style="color:'+color+'">●</span> বর্তমান <b>'+c+'</b> &nbsp;<span style="color:#bfae82">●</span> বাকি <b>'+rem+'</b></div>'
+      + '<div class="dsm">'+extra+'</div></div></div>';
     let big = bigCard("মোট পূরণ", totalCurrent, totalAlloc, totalRemain, "#12E3AB", "মোট অ্যালোকেশন "+totalAlloc);
     if(anySplit){
       big += bigCard("RYZE Rangers", agg.rr.c, agg.rr.a, Math.max(0,agg.rr.a-agg.rr.c), "#9A82E3", "অ্যালোকেশন "+agg.rr.a);
@@ -1228,11 +1231,11 @@ function drawDashboard(houses){
         {value: h.current||0, color: colors[i % colors.length], label: "Current"},
         {value: Math.max(0, (h.allocation||0)-(h.current||0)), color: "#EFE6CF", label: "Remaining"}
       ];
-      return '<div class="dcard"><div class="dt" style="font-size:.9rem;margin-bottom:6px">'+esc(code)+'</div>'
-        + makePieSVG(seg, 110)
-        + '<div class="dsm" style="margin-top:6px">'+(h.current||0)+'/'+(h.allocation||0)+'</div>'
+      return '<div class="dcard">' + makePieSVG(seg, 58)
+        + '<div class="dtx"><div class="dt" style="font-size:.85rem">'+esc(code)+'</div>'
+        + '<div class="dbig">'+(h.current||0)+'<span style="font-weight:500;font-size:.8rem;color:var(--muted)">/'+(h.allocation||0)+'</span></div>'
         + (h.split ? '<div class="dxs">RR '+(h.rr_current||0)+'/'+(h.rr_alloc||0)+' · RG '+(h.rg_current||0)+'/'+(h.rg_alloc||0)+'</div>' : '')
-        + '</div>';
+        + '</div></div>';
     }).join("");
     const pieHtml = '<div class="dash-big">'+big+'</div><div class="dash-houses">'+small+'</div>';
 
